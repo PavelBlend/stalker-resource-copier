@@ -1,7 +1,7 @@
 # STALKER Resource Copier
 
 ## Описание
-STALKER Resource Copier - это скрипт предназначен для копирования текстур (dds, tga, thm) и 3d моделей (object) локации из SDK в произвольную папку. Написан на Python. Для запуска нужно установить интерпретатор версии 3 ([python.org](http://www.python.org/)). 
+STALKER Resource Copier - это скрипт, предназначенный для копирования текстур (dds, tga, thm) и 3d моделей (object) локации из SDK в произвольную папку. Написан на Python. Для запуска нужно установить интерпретатор версии 3 ([python.org](http://www.python.org/)). 
 
 ## Использование
 - Запустить скрипт stalker_resource_copier.py
