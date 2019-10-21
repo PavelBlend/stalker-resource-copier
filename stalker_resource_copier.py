@@ -7,12 +7,14 @@ from xray import xray_ltx
 from xray import xray_io
 
 
-def copy_file(src, output):
+def copy_file(src, output, missing_files):
     if os.path.exists(src):
         out_dir_name = os.path.dirname(output)
         if not os.path.exists(out_dir_name):
             os.makedirs(out_dir_name)
         shutil.copyfile(src, output)
+    else:
+        missing_files.add(src)
 
 
 def read_object_main(data, textures):
@@ -28,7 +30,7 @@ def read_object_main(data, textures):
                 gamemtl = reader.gets()
                 texture = reader.gets()
                 vmap = reader.gets()
-                flags = reader.int()
+                surface_flags = reader.int()
                 reader.skip(4 + 4)    # fvf and ?
                 textures.add(texture)
         elif chunk_id == 0x0903:    # flags (object type)
@@ -53,6 +55,7 @@ def get_object_textures(object_path, textures):
 
 def copy_resource():
     fs_path = fs_path_ent.get()
+    fs_path = fs_path.replace('/', os.sep)
     fs = xray_ltx.StalkerLtxParser(fs_path)
     level_dir = fs.values['$maps$']
     level_name = level_name_var.get()
@@ -74,6 +77,7 @@ def copy_resource():
     out_folder = out_folder.replace('/', os.sep)
     out_objects_folder = os.path.join(out_folder, 'rawdata', 'objects')
     textures = set()
+    missing_files = set()
 
     game_textures_folder = fs.values['$game_textures$']
     raw_textures_folder = fs.values['$textures$']
@@ -112,7 +116,9 @@ def copy_resource():
                     [raw_thm_path, out_thm_path]
                 ]
                 for src, dist in texs:
-                    copy_file(src, dist)
+                    copy_file(src, dist, missing_files)
+        else:
+            missing_files.add(object_path)
 
         # THM
         thm_path = os.path.join(objects_folder, object_name + os.extsep + 'thm')
@@ -122,6 +128,8 @@ def copy_resource():
             if not os.path.exists(thm_dir):
                 os.makedirs(thm_dir)
             shutil.copyfile(thm_path, out_thm_path)
+        else:
+            missing_files.add(thm_path)
 
     textures = list(textures)
     textures.sort()
@@ -143,7 +151,20 @@ def copy_resource():
             [raw_thm_path, out_thm_path]
         ]
         for src, dist in texs:
-            copy_file(src, dist)
+            copy_file(src, dist, missing_files)
+
+    missing_files = list(missing_files)
+    missing_files.sort()
+    log_lines = []
+    if len(missing_files):
+        log_lines.append('These files are not copied because they are missing:\n\n')
+        for file in missing_files:
+            log_lines.append('{}\n'.format(file))
+    else:
+        log_lines.append('All files are copied.')
+    with open('stalker_resource_copier.log', 'w') as log_file:
+        for log_line in log_lines:
+            log_file.write(log_line)
 
 
 def set_output():
@@ -174,6 +195,7 @@ def open_fs():
 WINDOW_HEIGHT = 240
 WINDOW_WIDTH = 640
 BACKGROUND_COLOR = '#808080'
+ACTIVE_BACKGROUND_COLOR = '#A0A0A0'
 BUTTON_COLOR = '#A0A0A0'
 ACTIVE_BUTTON_COLOR = '#B3B3B3'
 BUTTON_FONT = ('Font', 10, 'bold')
@@ -196,8 +218,8 @@ root.geometry('+%d+%d' % (root_pos_x - WINDOW_WIDTH / 2, root_pos_y - WINDOW_HEI
 
 frame = tkinter.Frame(root, bg=BACKGROUND_COLOR, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
 # entry
-fs_path_ent = tkinter.Entry(frame, width=100, font=ENTRY_FONT)
-output_path_ent = tkinter.Entry(frame, width=100, font=ENTRY_FONT)
+fs_path_ent = tkinter.Entry(frame, width=100, font=ENTRY_FONT, bg=BUTTON_COLOR)
+output_path_ent = tkinter.Entry(frame, width=100, font=ENTRY_FONT, bg=BUTTON_COLOR)
 # buttons
 copy_resource_button = tkinter.Button(
     frame, text=COPY_RES_TEXT, width=BUTTON_WIDTH, height=BUTTON_HEIGHT,
@@ -218,8 +240,11 @@ level_list = ['-- None --', ]
 level_name_var = tkinter.StringVar()
 level_name_var.set(level_list[0])
 level_list_menu = tkinter.OptionMenu(frame, level_name_var, *level_list)
-level_list_menu['menu'].config(font=LABEL_FONT,bg=BACKGROUND_COLOR)
-level_list_menu.config(font=LABEL_FONT,bg=BACKGROUND_COLOR)
+level_list_menu['menu'].config(font=LABEL_FONT, bg=BACKGROUND_COLOR)
+level_list_menu.config(
+    font=LABEL_FONT, bg=BACKGROUND_COLOR,
+    activebackground=ACTIVE_BACKGROUND_COLOR
+)
 
 frame.grid(row=0,  column=0, pady=10)
 ver_label.grid(row=0,  column=1, padx=10)
