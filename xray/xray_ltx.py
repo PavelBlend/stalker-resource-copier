@@ -34,6 +34,7 @@ class StalkerLtxParser:
         lines_count = len(parse_lines)
         self.sections = {}
         self.values = {}
+        self.values_relative = {}
         while line_index < lines_count:
             line = parse_lines[line_index]
             if line[0] == '[':
@@ -70,13 +71,17 @@ class StalkerLtxParser:
                     line_parts = line.split('|')
                 if line_parts[2] == '$fs_root$':
                     self.values[value] = os.path.dirname(self.path)
+                    self.values_relative[value] = ''
                 elif line_parts[2].startswith('$') and line_parts[2].endswith('$'):
                     if len(line_parts) > 3:
                         self.values[value] = os.path.join(self.values[line_parts[2]], line_parts[3])
+                        self.values_relative[value] = os.path.join(self.values_relative[line_parts[2]], line_parts[3])
                     else:
                         self.values[value] = self.values[line_parts[2]]
+                        self.values_relative[value] = self.values_relative[line_parts[2]]
                 else:
                     self.values[value] = os.path.join(self.values['$sdk_root$'], line_parts[2])
+                    self.values_relative[value] = os.path.join(self.values_relative['$sdk_root$'], line_parts[2])
                 line_index += 1
             elif line.startswith('#include'):
                 line_index += 1
