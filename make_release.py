@@ -10,8 +10,8 @@ with ZipFile('stalker-resource-copier-' + ('.'.join(map(str, version))) + '.zip'
         compress_type=ZIP_DEFLATED
     )
     z.write(
-        'readme.txt',
-        'stalker_resource_copier/readme.txt',
+        'README.md',
+        'stalker_resource_copier/README.md',
         compress_type=ZIP_DEFLATED
     )
     z.write(
