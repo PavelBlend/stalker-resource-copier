@@ -113,6 +113,44 @@ def read_level_details(details_path, objects_list, textures):
                     textures.add(base_tex)
 
 
+def read_glow_data(data, textures):
+    chunked_reader = xray_io.ChunkedReader(data)
+    for chunk_id, chunk_data in chunked_reader:
+        if chunk_id == 0xc415:
+            packed_reader = xray_io.PackedReader(chunk_data)
+            texture = packed_reader.gets()
+            textures.add(texture)
+
+
+def read_glow(data, textures):
+    chunked_reader = xray_io.ChunkedReader(data)
+    for chunk_id, chunk_data in chunked_reader:
+        if chunk_id == 0x7777:
+            read_glow_data(chunk_data, textures)
+
+
+def read_glows_objects(data, textures):
+    chunked_reader = xray_io.ChunkedReader(data)
+    for glow_index, glow_data in chunked_reader:
+        read_glow(glow_data, textures)
+
+
+def read_glows(data, textures):
+    chunked_reader = xray_io.ChunkedReader(data)
+    for chunk_id, chunk_data in chunked_reader:
+        if chunk_id == 0x3:
+            read_glows_objects(chunk_data, textures)
+
+
+def read_level_glows(glows_path, textures):
+    with open(glows_path, 'rb') as file:
+        data = file.read()
+    chunked_reader = xray_io.ChunkedReader(data)
+    for chunk_id, chunk_data in chunked_reader:
+        if chunk_id == 0x8001:
+            read_glows(chunk_data, textures)
+
+
 def copy_resource():
     start_time = time.time()
     fs_path = fs_path_ent.get()
@@ -158,6 +196,17 @@ def copy_resource():
             elif level_file == 'detail_object.part':
                 details_path = os.path.join(level_folder, level_file)
                 read_level_details(details_path, objects_list, textures)
+            elif level_file == 'glow.part':
+                if level_version_var.get() == 'CS/CoP':
+                    glows = xray_ltx.StalkerLtxParser(os.path.join(level_folder, level_file))
+                    for section in glows.sections.values():
+                        if section.name.startswith('object_'):
+                            for param_name, param_value in section.params.items():
+                                if param_name == 'texture_name':
+                                    textures.add(param_value)
+                else:
+                    level_path = os.path.join(level_folder, level_file)
+                    read_level_glows(level_path, textures)
     objects_list = list(objects_list)
     objects_list.sort()
     objects_folder = fs.values['$objects$']
