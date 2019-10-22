@@ -90,6 +90,29 @@ def get_object_textures(object_path, textures):
             return object_type
 
 
+def read_level_details(details_path, objects_list, textures):
+    with open(details_path, 'rb') as file:
+        data = file.read()
+    chunked_reader = xray_io.ChunkedReader(data)
+    for chunk_id, chunk_data in chunked_reader:
+        if chunk_id == 0x800c:    # SCENE_CHUNK_DETAIL_OBJECTS
+            det_reader = xray_io.ChunkedReader(chunk_data)
+            for det_obj_chunk_id, det_obj_chunk_data in det_reader:
+                if det_obj_chunk_id == 0x0001:    # DETMGR_CHUNK_OBJECTS
+                    det_objs_reader = xray_io.ChunkedReader(det_obj_chunk_data)
+                    for det_obj_index, det_obj_data in det_objs_reader:
+                        det_obj_chunked_reader = xray_io.ChunkedReader(det_obj_data)
+                        for det_chunk_id, det_chunk_data in det_obj_chunked_reader:
+                            if det_chunk_id == 0x0101:    # DETOBJ_CHUNK_REFERENCE
+                                det_packed_reader = xray_io.PackedReader(det_chunk_data)
+                                reference_object = det_packed_reader.gets()
+                                objects_list.add(reference_object)
+                elif det_obj_chunk_id == 0x1002:    # DETMGR_CHUNK_TEXTURE
+                    det_tex_reader = xray_io.PackedReader(det_obj_chunk_data)
+                    base_tex = det_tex_reader.gets()
+                    textures.add(base_tex)
+
+
 def copy_resource():
     start_time = time.time()
     fs_path = fs_path_ent.get()
@@ -97,11 +120,15 @@ def copy_resource():
     fs = xray_ltx.StalkerLtxParser(fs_path)
     out_folder = output_path_ent.get()
     out_folder = out_folder.replace('/', os.sep)
+    if os.listdir(out_folder):
+        error_label.configure(text='ERROR: Output folder is not empty!')
+        return
     level_dir = fs.values['$maps$']
     missing_files = set()
     output_level_dir = os.path.join(out_folder, fs.values_relative['$maps$'])
     level_name = level_name_var.get()
     if level_name == '-- None --':
+        error_label.configure(text='ERROR: Level not selected!')
         return
     level_folder = os.path.join(level_dir, level_name)
     level_main_file_path = os.path.join(level_dir, level_name) + os.extsep + 'level'
@@ -114,6 +141,7 @@ def copy_resource():
             part_out = os.path.join(os.path.join(output_level_dir, level_name), level_file)
             copy_file(part_src, part_out, missing_files)
     objects_list = set()
+    textures = set()
     if os.path.exists(level_folder):
         for level_file in os.listdir(level_folder):
             if level_file == 'scene_object.part':
@@ -127,11 +155,13 @@ def copy_resource():
                 else:
                     level_path = os.path.join(level_folder, level_file)
                     read_level_objects(level_path, objects_list)
+            elif level_file == 'detail_object.part':
+                details_path = os.path.join(level_folder, level_file)
+                read_level_details(details_path, objects_list, textures)
     objects_list = list(objects_list)
     objects_list.sort()
     objects_folder = fs.values['$objects$']
     out_objects_folder = os.path.join(out_folder, fs.values_relative['$objects$'])
-    textures = set()
 
     game_textures_folder = fs.values['$game_textures$']
     raw_textures_folder = fs.values['$textures$']
@@ -221,13 +251,14 @@ def copy_resource():
             log_file.write(log_line)
 
     settings_text = '[default_settings]\n'
-    settings_text += 'fs_path = {}\n'.format(fs_path)
-    settings_text += 'out_folder = {}\n'.format(out_folder)
-    settings_text += 'level_version = {}\n'.format(level_version_var.get())
+    settings_text += 'fs_path = "{}"\n'.format(fs_path)
+    settings_text += 'out_folder = "{}"\n'.format(out_folder)
+    settings_text += 'level_version = "{}"\n'.format(level_version_var.get())
 
-    with open(settings_file_name, 'w') as file:
+    with open(settings_file_name, 'w', encoding='utf-8') as file:
         file.write(settings_text)
 
+    error_label.configure(text='')
     time_label_text = 'total time: {} sec'.format(round(time.time() - start_time, 2))
     timer_label.configure(text=time_label_text)
 
@@ -303,6 +334,7 @@ ver_label = tkinter.Label(frame, text='version {0}.{1}.{2}'.format(*VERSION), fo
 date_label = tkinter.Label(frame, text='22.10.2019', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 github_label = tkinter.Label(frame, text=GITHUB_REPO_URL, font=LABEL_FONT, bg=BACKGROUND_COLOR, fg=URL_COLOR, cursor="hand2")
 timer_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=BACKGROUND_COLOR)
+error_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=BACKGROUND_COLOR, fg='#BC0000')
 fs_path_label = tkinter.Label(frame, text='fs.ltx', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 output_path_label = tkinter.Label(frame, text='output', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 level_name_label = tkinter.Label(frame, text='level name', font=LABEL_FONT, bg=BACKGROUND_COLOR)
@@ -363,6 +395,8 @@ cur_row += 1
 github_label.grid(row=cur_row,  column=1, padx=10)
 cur_row += 1
 timer_label.grid(row=cur_row,  column=1, padx=10)
+cur_row += 1
+error_label.grid(row=cur_row,  column=1, padx=10)
 cur_row += 1
 
 # bind

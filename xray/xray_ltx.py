@@ -21,8 +21,22 @@ class StalkerLtxParser:
     def parse(self):
         parse_lines = []
         for line in self.data.split('\n'):
+            if line.count('"') > 2:
+                raise BaseException('Invalid *.ltx syntax')
             parse_line = ''
-            for char in line:
+            char_index = 0
+            char_count = len(line)
+            while char_index < char_count:
+                char = line[char_index]
+                char_index += 1
+                if char == '"':
+                    parse_line += char
+                    while char_index < char_count:
+                        char = line[char_index]
+                        char_index += 1
+                        parse_line += char
+                        if char == '"':
+                            break
                 if char in self.WHITESPACE:
                     continue
                 if char in self.COMMENT:
@@ -57,6 +71,8 @@ class StalkerLtxParser:
                     else:
                         if '=' in line:
                             param_name, param_value = line.split('=')
+                            if param_value.startswith('"') and param_value.endswith('"'):
+                                param_value = param_value[1 : -2]    # cut " chars
                         else:
                             param_name = line
                             param_value = None
