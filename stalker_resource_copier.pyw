@@ -57,18 +57,27 @@ def read_level_objects(level_path, objects_list):
 def read_object_main(data, textures):
     chunked_reader = xray_io.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0x0907:    # surfaces
+        if chunk_id in (0x0905, 0x0906, 0x0907):    # surfaces
             reader = xray_io.PackedReader(chunk_data)
             surfaces_count = reader.int()
             for surface_index in range(surfaces_count):
-                name = reader.gets()
-                eshader = reader.gets()
-                cshader = reader.gets()
-                gamemtl = reader.gets()
-                texture = reader.gets()
-                vmap = reader.gets()
-                surface_flags = reader.int()
-                reader.skip(4 + 4)    # fvf and ?
+                if chunk_id in (0x0906, 0x0907):
+                    name = reader.gets()
+                    eshader = reader.gets()
+                    cshader = reader.gets()
+                    if chunk_id == 0x0907:
+                        gamemtl = reader.gets()
+                    texture = reader.gets()
+                    vmap = reader.gets()
+                    surface_flags = reader.int()
+                    reader.skip(4 + 4)    # fvf and ?
+                else:
+                    name = reader.gets()
+                    eshader = reader.gets()
+                    reader.skip(1)    # flags
+                    reader.skip(4 + 4)    # fvf and TCs count
+                    texture = reader.gets()
+                    vmap = reader.gets()
                 textures.add(texture)
         elif chunk_id == 0x0903:    # flags (object type)
             reader = xray_io.PackedReader(chunk_data)
@@ -151,6 +160,46 @@ def read_level_glows(glows_path, textures):
             read_glows(chunk_data, textures)
 
 
+def read_wallmark_object(data, textures):
+    packed_reader = xray_io.PackedReader(data)
+    item_count = packed_reader.getf('<I')[0]
+    shader_name = packed_reader.gets()
+    tex_name = packed_reader.gets()
+    textures.add(tex_name)
+    for item_index in range(item_count):
+        packed_reader.skip(1)    # flags
+        packed_reader.skip(3 * 4 * 2)    # bbox
+        packed_reader.skip(3 * 4 + 4)    # bounds
+        packed_reader.skip(3 * 4)    # w, h, r
+        vertices_count = packed_reader.getf('<I')[0]
+        for vert_index in range(vertices_count):
+            packed_reader.skip(3 * 4)    # position
+            packed_reader.skip(4)    # color
+            packed_reader.skip(2 * 4)    # uv
+
+
+def read_wallmarks_objects(data, textures):
+    chunked_reader = xray_io.ChunkedReader(data)
+    for chunk_id, chunk_data in chunked_reader:
+        read_wallmark_object(chunk_data, textures)
+
+
+def read_wallmarks(data, textures):
+    chunked_reader = xray_io.ChunkedReader(data)
+    for chunk_id, chunk_data in chunked_reader:
+        if chunk_id == 0x0005:
+            read_wallmarks_objects(chunk_data, textures)
+
+
+def read_level_wallmarks(wallmark_path, textures):
+    with open(wallmark_path, 'rb') as file:
+        data = file.read()
+    chunked_reader = xray_io.ChunkedReader(data)
+    for chunk_id, chunk_data in chunked_reader:
+        if chunk_id == 0x800e:
+            read_wallmarks(chunk_data, textures)
+
+
 def copy_resource():
     start_time = time.time()
     fs_path = fs_path_ent.get()
@@ -207,6 +256,9 @@ def copy_resource():
                 else:
                     level_path = os.path.join(level_folder, level_file)
                     read_level_glows(level_path, textures)
+            elif level_file == 'wallmark.part':
+                wallmark_path = os.path.join(level_folder, level_file)
+                read_level_wallmarks(wallmark_path, textures)
     objects_list = list(objects_list)
     objects_list.sort()
     objects_folder = fs.values['$objects$']
