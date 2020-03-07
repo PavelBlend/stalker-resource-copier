@@ -204,9 +204,14 @@ def copy_resource():
     start_time = time.time()
     fs_path = fs_path_ent.get()
     fs_path = fs_path.replace('/', os.sep)
+    if not os.path.exists(fs_path):
+        error_label.configure(text='ERROR: fs.ltx does not exist!')
+        return
     fs = xray_ltx.StalkerLtxParser(fs_path)
     out_folder = output_path_ent.get()
     out_folder = out_folder.replace('/', os.sep)
+    if not os.path.exists(out_folder):
+        os.makedirs(out_folder)
     if os.listdir(out_folder):
         error_label.configure(text='ERROR: Output folder is not empty!')
         return
@@ -371,7 +376,7 @@ def set_output():
 
 
 def add_levels_to_list(file_path):
-    if file_path:
+    if file_path and os.path.exists(file_path):
         menu = level_list_menu['menu']
         menu.delete(0, "end")
         fs = xray_ltx.StalkerLtxParser(file_path)
