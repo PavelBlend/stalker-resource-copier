@@ -4,7 +4,7 @@ from tkinter import filedialog
 from xray import xray_ltx, xray_io
 
 
-VERSION = (0, 0, 2)
+VERSION = (0, 0, 3)
 GITHUB_REPO_URL = 'https://github.com/PavelBlend/stalker-resource-copier'
 
 
@@ -437,7 +437,7 @@ open_fs_button = tkinter.Button(frame, text='Open', command=open_fs, bg=BUTTON_C
 set_output_button = tkinter.Button(frame, text='Set', command=set_output, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
 # labels
 ver_label = tkinter.Label(frame, text='version {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=BACKGROUND_COLOR)
-date_label = tkinter.Label(frame, text='22.10.2019', font=LABEL_FONT, bg=BACKGROUND_COLOR)
+date_label = tkinter.Label(frame, text='07.03.2020', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 github_label = tkinter.Label(frame, text=GITHUB_REPO_URL, font=LABEL_FONT, bg=BACKGROUND_COLOR, fg=URL_COLOR, cursor="hand2")
 timer_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 error_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=BACKGROUND_COLOR, fg='#BC0000')
