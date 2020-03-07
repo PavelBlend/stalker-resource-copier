@@ -14,10 +14,10 @@ def visit_repo_page(event):
 
 def copy_file(src, output, missing_files):
     if os.path.exists(src):
-        out_dir_name = os.path.dirname(output)
+        out_dir_name = os.path.dirname(output.lower())
         if not os.path.exists(out_dir_name):
             os.makedirs(out_dir_name)
-        shutil.copyfile(src, output)
+        shutil.copyfile(src, output.lower())
     else:
         missing_files.add(src)
 
