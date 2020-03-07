@@ -2,7 +2,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from os import path, walk
 
 
-version = (0, 0, 2)
+version = (0, 0, 3)
 with ZipFile('stalker-resource-copier-' + ('.'.join(map(str, version))) + '.zip', 'w') as z:
     z.write(
         'stalker_resource_copier.pyw',
