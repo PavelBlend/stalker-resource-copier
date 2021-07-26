@@ -5,6 +5,7 @@ from xray import xray_ltx, xray_io
 
 
 VERSION = (0, 0, 3)
+DATE = (2021, 7, 26)
 GITHUB_REPO_URL = 'https://github.com/PavelBlend/stalker-resource-copier'
 
 
@@ -380,15 +381,18 @@ def add_levels_to_list(file_path):
         menu = level_list_menu['menu']
         menu.delete(0, "end")
         fs = xray_ltx.StalkerLtxParser(file_path)
-        level_dir = fs.values['$maps$']
-        for level_file in os.listdir(level_dir):
-            if os.path.isfile(os.path.join(level_dir, level_file)):
-                level_name, level_ext = os.path.splitext(level_file)
-                if level_ext == '.level':
-                    menu.add_command(
-                        label=level_name,
-                        command=lambda value=level_name: level_name_var.set(value)
-                    )
+        maps_dir = fs.values['$maps$']
+        for root, dirs, files in os.walk(maps_dir):
+            for level_file in files:
+                level_abs_path = os.path.join(root, level_file)
+                if os.path.isfile(level_abs_path):
+                    level_name, level_ext = os.path.splitext(level_file)
+                    level_path = level_abs_path[len(maps_dir) : -len(level_ext)]
+                    if level_ext == '.level':
+                        menu.add_command(
+                            label=level_path,
+                            command=lambda value=level_path: level_name_var.set(value)
+                        )
 
 
 def open_fs():
@@ -437,13 +441,14 @@ open_fs_button = tkinter.Button(frame, text='Open', command=open_fs, bg=BUTTON_C
 set_output_button = tkinter.Button(frame, text='Set', command=set_output, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
 # labels
 ver_label = tkinter.Label(frame, text='version {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=BACKGROUND_COLOR)
-date_label = tkinter.Label(frame, text='07.03.2020', font=LABEL_FONT, bg=BACKGROUND_COLOR)
+date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
+date_label = tkinter.Label(frame, text=date_text, font=LABEL_FONT, bg=BACKGROUND_COLOR)
 github_label = tkinter.Label(frame, text=GITHUB_REPO_URL, font=LABEL_FONT, bg=BACKGROUND_COLOR, fg=URL_COLOR, cursor="hand2")
 timer_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 error_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=BACKGROUND_COLOR, fg='#BC0000')
 fs_path_label = tkinter.Label(frame, text='fs.ltx', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 output_path_label = tkinter.Label(frame, text='output', font=LABEL_FONT, bg=BACKGROUND_COLOR)
-level_name_label = tkinter.Label(frame, text='level name', font=LABEL_FONT, bg=BACKGROUND_COLOR)
+level_name_label = tkinter.Label(frame, text='level path', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 level_version_label = tkinter.Label(frame, text='level version', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 # menus
 level_list = ['-- None --', ]
