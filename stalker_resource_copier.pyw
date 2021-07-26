@@ -4,7 +4,7 @@ from tkinter import filedialog
 from xray import xray_ltx, xray_io
 
 
-VERSION = (0, 0, 3)
+VERSION = (0, 0, 4)
 DATE = (2021, 7, 26)
 GITHUB_REPO_URL = 'https://github.com/PavelBlend/stalker-resource-copier'
 
