@@ -238,28 +238,32 @@ def copy_resource():
     if os.path.exists(level_folder):
         for level_file in os.listdir(level_folder):
             if level_file == 'scene_object.part':
-                if level_version_var.get() == 'CS/CoP':
+                try:
+                    # cop
                     objects = xray_ltx.StalkerLtxParser(os.path.join(level_folder, level_file))
                     for section in objects.sections.values():
                         if section.name.startswith('object_'):
                             for param_name, param_value in section.params.items():
                                 if param_name == 'reference_name':
                                     objects_list.add(param_value)
-                else:
+                except:
+                    # soc
                     level_path = os.path.join(level_folder, level_file)
                     read_level_objects(level_path, objects_list)
             elif level_file == 'detail_object.part':
                 details_path = os.path.join(level_folder, level_file)
                 read_level_details(details_path, objects_list, textures)
             elif level_file == 'glow.part':
-                if level_version_var.get() == 'CS/CoP':
+                try:
+                    # cop
                     glows = xray_ltx.StalkerLtxParser(os.path.join(level_folder, level_file))
                     for section in glows.sections.values():
                         if section.name.startswith('object_'):
                             for param_name, param_value in section.params.items():
                                 if param_name == 'texture_name':
                                     textures.add(param_value)
-                else:
+                except:
+                    # soc
                     level_path = os.path.join(level_folder, level_file)
                     read_level_glows(level_path, textures)
             elif level_file == 'wallmark.part':
@@ -360,7 +364,6 @@ def copy_resource():
     settings_text = '[default_settings]\n'
     settings_text += 'fs_path = "{}"\n'.format(fs_path)
     settings_text += 'out_folder = "{}"\n'.format(out_folder)
-    settings_text += 'level_version = "{}"\n'.format(level_version_var.get())
 
     with open(settings_file_name, 'w', encoding='utf-8') as file:
         file.write(settings_text)
@@ -429,8 +432,8 @@ root.geometry('+%d+%d' % (root_pos_x - WINDOW_WIDTH / 2, root_pos_y - WINDOW_HEI
 
 frame = tkinter.Frame(root, bg=BACKGROUND_COLOR, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
 # entry
-fs_path_ent = tkinter.Entry(frame, width=95, font=ENTRY_FONT, bg=BUTTON_COLOR)
-output_path_ent = tkinter.Entry(frame, width=95, font=ENTRY_FONT, bg=BUTTON_COLOR)
+fs_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
+output_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
 # buttons
 copy_resource_button = tkinter.Button(
     frame, text=COPY_RES_TEXT, width=BUTTON_WIDTH, height=BUTTON_HEIGHT,
@@ -449,7 +452,6 @@ error_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=BACKGROUND_COLOR
 fs_path_label = tkinter.Label(frame, text='fs.ltx', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 output_path_label = tkinter.Label(frame, text='output', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 level_name_label = tkinter.Label(frame, text='level path', font=LABEL_FONT, bg=BACKGROUND_COLOR)
-level_version_label = tkinter.Label(frame, text='level version', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 # menus
 level_list = ['-- None --', ]
 level_name_var = tkinter.StringVar()
@@ -460,26 +462,6 @@ level_list_menu.config(
     font=LABEL_FONT, bg=BACKGROUND_COLOR,
     activebackground=ACTIVE_BACKGROUND_COLOR, width=32
 )
-
-level_version_list = ['', ]
-level_version_var = tkinter.StringVar()
-level_version_var.set(level_version_list[0])
-level_version_menu = tkinter.OptionMenu(frame, level_version_var, *level_version_list)
-level_version_menu['menu'].config(font=LABEL_FONT, bg=BACKGROUND_COLOR)
-level_version_menu.config(
-    font=LABEL_FONT, bg=BACKGROUND_COLOR,
-    activebackground=ACTIVE_BACKGROUND_COLOR, width=32
-)
-level_version_menu['menu'].delete(0, "end")
-level_version_menu['menu'].add_command(
-    label='SoC',
-    command=lambda value='SoC': level_version_var.set(value)
-)
-level_version_menu['menu'].add_command(
-    label='CS/CoP',
-    command=lambda value='CS/CoP': level_version_var.set(value)
-)
-level_version_var.set('CS/CoP')
 
 frame.grid(row=0,  column=0, pady=10)
 cur_row = 0
@@ -493,9 +475,6 @@ set_output_button.grid(row=cur_row,  column=2, padx=0)
 cur_row += 1
 level_name_label.grid(row=cur_row,  column=0, padx=0)
 level_list_menu.grid(row=cur_row,  column=1, padx=0)
-cur_row += 1
-level_version_label.grid(row=cur_row,  column=0, padx=10)
-level_version_menu.grid(row=cur_row,  column=1, padx=10)
 cur_row += 1
 copy_resource_button.grid(row=cur_row,  column=1, padx=10)
 cur_row += 1
@@ -524,5 +503,4 @@ if os.path.exists(settings_file_name):
         add_levels_to_list(default_settings.params['fs_path'])
         output_path_ent.delete(0, last=tkinter.END)
         output_path_ent.insert(0, default_settings.params['out_folder'])
-        level_version_var.set(default_settings.params['level_version'])
 root.mainloop()
