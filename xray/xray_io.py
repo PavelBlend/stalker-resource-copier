@@ -140,34 +140,3 @@ class ChunkedReader:
 
     def nextf(self, expected_cid, fmt):
         return struct.unpack(fmt, self.next(expected_cid))
-
-
-class PackedWriter():
-    def __init__(self):
-        self.data = bytearray()
-
-    def putp(self, pkw):
-        self.data += pkw.data
-        return self
-
-    def putf(self, fmt, *args):
-        self.data += struct.pack(fmt, *args)
-        return self
-
-    def puts(self, string):
-        try:
-            self.data += string.encode('cp1251')
-        except UnicodeEncodeError:
-            raise Exception('Not valid string: {}'.format(string))
-        self.data += b'\x00'
-        return self
-
-
-class ChunkedWriter():
-    def __init__(self):
-        self.data = bytearray()
-
-    def put(self, cid, writer):
-        self.data += struct.pack('II', cid, len(writer.data))
-        self.data += writer.data
-        return self
