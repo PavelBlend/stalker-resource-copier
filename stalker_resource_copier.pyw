@@ -60,7 +60,7 @@ def read_object_main(data, textures):
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id in (0x0905, 0x0906, 0x0907):    # surfaces
             reader = xray_io.PackedReader(chunk_data)
-            surfaces_count = reader.int()
+            surfaces_count = reader.getf('<I')[0]
             for surface_index in range(surfaces_count):
                 if chunk_id in (0x0906, 0x0907):
                     name = reader.gets()
@@ -70,7 +70,7 @@ def read_object_main(data, textures):
                         gamemtl = reader.gets()
                     texture = reader.gets()
                     vmap = reader.gets()
-                    surface_flags = reader.int()
+                    surface_flags = reader.getf('<I')[0]
                     reader.skip(4 + 4)    # fvf and ?
                 else:
                     name = reader.gets()

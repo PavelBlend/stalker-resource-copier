@@ -1,142 +1,60 @@
 import struct
 
 
-class FastBytes:
-    @staticmethod
-    def short_at(data, offs):
-        return data[offs] | (data[offs + 1] << 8)
-
-    @staticmethod
-    def int_at(data, offs):
-        return data[offs] | (data[offs + 1] << 8) | (data[offs + 2] << 16) | (data[offs + 3] << 24)
-
-    @staticmethod
-    def skip_str_at(data, offs):
-        dlen = len(data)
-        while (offs < dlen) and (data[offs] != 0):
-            offs += 1
-        return offs + 1
-
-    @staticmethod
-    def skip_str_at_a(data, offs):
-        dlen = len(data)
-        while (offs < dlen) and (data[offs] != 0xa):
-            offs += 1
-        return offs + 1
-
-    @staticmethod
-    def str_at(data, offs):
-        new_offs = FastBytes.skip_str_at(data, offs)
-        return data[offs:new_offs - 1].decode('cp1251'), new_offs
-
-
 class PackedReader:
-    __slots__ = ['__offs', '__data', '__view']
-    __PREP_I = struct.Struct('<I')
-
-    def __init__(self, data):
-        self.__offs = 0
-        self.__data = data
-        self.__view = None
-
-    def getb(self, count):
-        self.__offs += count
-        return self.__data[self.__offs - count:self.__offs]
+    def __init__(self, reader_data):
+        self.offs = 0
+        self.data = reader_data
+        self.size = len(self.data)
 
     def getf(self, fmt):
-        size = struct.calcsize(fmt)
-        self.__offs += size
-        return struct.unpack_from(fmt, self.__data, self.__offs - size)
+        format_size = struct.calcsize(fmt)
+        self.offs += format_size
+        return struct.unpack_from(fmt, self.data, self.offs - format_size)
 
-    def byte(self):
-        return self.__data[self._next(1)]
+    def gets(self):
+        zero_pos = self.offs
+        while (zero_pos < self.size) and (self.data[zero_pos] != 0):
+            zero_pos += 1
 
-    def int(self):
-        return FastBytes.int_at(self.__data, self._next(4))
+        str_bytes = self.data[self.offs : zero_pos]
+        self.offs = zero_pos + 1
 
-    def _next(self, size):
-        offs = self.__offs
-        self.__offs = offs + size
-        return offs
-
-    @staticmethod
-    def prep(fmt):
-        return struct.Struct('<' + fmt)
-
-    def getp(self, prep):
-        offs = self.__offs
-        self.__offs = offs + prep.size
-        return prep.unpack_from(self.__data, offs)
-
-    def gets(self, onerror=None):
-        data, offs = self.__data, self.__offs
-        new_offs = self.__offs = FastBytes.skip_str_at(data, offs)
-        bts = data[offs:new_offs - 1]
-        try:
-            return str(bts, 'cp1251')
-        except UnicodeError as error:
-            if onerror is None:
-                raise
-            onerror(error)
-            return str(bts, 'cp1251', errors='replace')
-
-    def gets_a(self, onerror=None):
-        data, offs = self.__data, self.__offs
-        new_offs = self.__offs = FastBytes.skip_str_at_a(data, offs)
-        bts = data[offs:new_offs - 1]
-        try:
-            return str(bts, 'cp1251')
-        except UnicodeError as error:
-            if onerror is None:
-                raise
-            onerror(error)
-            return str(bts, 'cp1251', errors='replace')
-
-    def getv(self):
-        view = self.__view
-        if view is None:
-            self.__view = view = memoryview(self.__data)
-        return view[self.__offs:]
+        return str(str_bytes, 'cp1251')
 
     def skip(self, count):
-        self.__offs += count
-
-    def offset(self):
-        return self.__offs
-
-    def set_offset(self, offset):
-        self.__offs = offset
+        self.offs += count
 
 
 class ChunkedReader:
     __MASK_COMPRESSED = 0x80000000
 
     def __init__(self, data):
-        self.__offs = 0
-        self.__data = data
+        self.offs = 0
+        self.data = data
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        offs = self.__offs
-        data = self.__data
-        if offs >= len(data):
+        header_offset = self.offs
+
+        if header_offset >= len(self.data):
             raise StopIteration
-        cid = FastBytes.int_at(data, offs)
-        size = FastBytes.int_at(data, offs + 4)
-        offs += 8
-        self.__offs = offs + size
-        if cid & ChunkedReader.__MASK_COMPRESSED:
-            cid &= ~ChunkedReader.__MASK_COMPRESSED
-            raise Exception('unsupported: compressed chunk: {}'.format(cid)) 
-        return cid, data[offs:offs + size]
 
-    def next(self, expected_cid):
-        cid, data = next(self)
-        if cid != expected_cid:
-            raise Exception('expected chunk: {}, but found: {}'.format(expected_cid, cid))
-        return data
+        header_format = '<2I'
+        header_size = struct.calcsize(header_format)
+        chunk_id, chunk_size = struct.unpack(
+            header_format,
+            self.data[header_offset : header_offset+header_size]
+        )
+        header_offset += header_size
+        self.offs = header_offset + chunk_size
 
-    def nextf(self, expected_cid, fmt):
-        return struct.unpack(fmt, self.next(expected_cid))
+        if chunk_id & ChunkedReader.__MASK_COMPRESSED:
+            chunk_id &= ~ChunkedReader.__MASK_COMPRESSED
+            raise Exception(
+                'unsupported: compressed chunk: {}'.format(chunk_id)
+            )
+
+        return chunk_id, self.data[header_offset : header_offset+chunk_size]
