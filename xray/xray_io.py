@@ -1,8 +1,4 @@
 import struct
-from .lzhuf import decompress_buffer
-
-
-ENCODE_ERROR = BaseException
 
 
 class FastBytes:
@@ -133,9 +129,7 @@ class ChunkedReader:
         self.__offs = offs + size
         if cid & ChunkedReader.__MASK_COMPRESSED:
             cid &= ~ChunkedReader.__MASK_COMPRESSED
-            textsize = FastBytes.int_at(data, offs)
-            buffer = data[offs + 4:offs + size]
-            return cid, memoryview(decompress_buffer(buffer, textsize))
+            raise Exception('unsupported: compressed chunk: {}'.format(cid)) 
         return cid, data[offs:offs + size]
 
     def next(self, expected_cid):
@@ -164,7 +158,7 @@ class PackedWriter():
         try:
             self.data += string.encode('cp1251')
         except UnicodeEncodeError:
-            raise ENCODE_ERROR('Not valid string: {}'.format(string))
+            raise Exception('Not valid string: {}'.format(string))
         self.data += b'\x00'
         return self
 
