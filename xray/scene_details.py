@@ -8,7 +8,7 @@ DETOBJ_CHUNK_REFERENCE = 0x0101
 DETMGR_CHUNK_TEXTURE = 0x1002
 
 
-def read_objects(data, objects_list):
+def read_object(data, objects_list):
     chunked_reader = reader.ChunkedReader(data)
 
     for chunk_id, chunk_data in chunked_reader:
@@ -22,7 +22,7 @@ def read_objects(data, objects_list):
     chunked_reader = reader.ChunkedReader(data)
 
     for obj_index, obj_data in chunked_reader:
-        read_objects(obj_data, objects_list)
+        read_object(obj_data, objects_list)
 
 
 def read_detail_objects(data, objects_list, textures):

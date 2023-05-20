@@ -84,42 +84,23 @@ def copy_resource():
             xray.utils.copy_file(part_src, part_out, missing_files)
     objects_list = set()
     textures = set()
+
     if os.path.exists(level_folder):
         for level_file in os.listdir(level_folder):
+            file_path = os.path.join(level_folder, level_file)
+
             if level_file == 'scene_object.part':
-                try:
-                    # cop
-                    objects = xray.ltx.LtxParser()
-                    objects.from_file(os.path.join(level_folder, level_file))
-                    for section in objects.sections.values():
-                        if section.name.startswith('object_'):
-                            for param_name, param_value in section.params.items():
-                                if param_name == 'reference_name':
-                                    objects_list.add(param_value)
-                except:
-                    # soc
-                    level_path = os.path.join(level_folder, level_file)
-                    xray.scene_objects.read_scene_objects_part(level_path, objects_list)
+                xray.scene_objects.read_scene_objects_part(file_path, objects_list)
+
             elif level_file == 'detail_object.part':
-                details_path = os.path.join(level_folder, level_file)
-                xray.scene_details.read_level_details(details_path, objects_list, textures)
+                xray.scene_details.read_level_details(file_path, objects_list, textures)
+
             elif level_file == 'glow.part':
-                try:
-                    # cop
-                    glows = xray.ltx.LtxParser()
-                    glows.from_file(os.path.join(level_folder, level_file))
-                    for section in glows.sections.values():
-                        if section.name.startswith('object_'):
-                            for param_name, param_value in section.params.items():
-                                if param_name == 'texture_name':
-                                    textures.add(param_value)
-                except:
-                    # soc
-                    level_path = os.path.join(level_folder, level_file)
-                    xray.scene_glows.read_level_glows(level_path, textures)
+                xray.scene_glows.read_level_glows(file_path, textures)
+
             elif level_file == 'wallmark.part':
-                wallmark_path = os.path.join(level_folder, level_file)
-                xray.scene_wallmarks.read_level_wallmarks(wallmark_path, textures)
+                xray.scene_wallmarks.read_level_wallmarks(file_path, textures)
+
     objects_list = list(objects_list)
     objects_list.sort()
     objects_folder = os.path.join(fs_dir, fs.values['$objects$'])

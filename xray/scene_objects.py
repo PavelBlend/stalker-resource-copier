@@ -1,5 +1,6 @@
 from . import utils
 from . import reader
+from . import ltx
 
 
 # scene objects chunks
@@ -47,7 +48,7 @@ def read_scene_objects(data, objects_list):
             read_objects(chunk_data, objects_list)
 
 
-def read_scene_objects_part(file_path, objects_list):
+def read_soc_objects_part(file_path, objects_list):
     # scene_objects.part for soc
 
     data = utils.read_file(file_path)
@@ -57,3 +58,26 @@ def read_scene_objects_part(file_path, objects_list):
 
         if chunk_id == CHUNK_SCENE_OBJECTS:
             references = read_scene_objects(chunk_data, objects_list)
+
+
+def read_cop_objects_part(file_path, objects_list):
+    objects = ltx.LtxParser()
+    objects.from_file(file_path)
+
+    for section in objects.sections.values():
+        if not section.name.startswith('object_'):
+            continue
+
+        for param_name, param_value in section.params.items():
+            if param_name == 'reference_name':
+                objects_list.add(param_value)
+
+
+def read_scene_objects_part(file_path, objects_list):
+    try:
+        # cop
+        read_cop_objects_part(file_path, objects_list)
+
+    except:
+        # soc
+        read_soc_objects_part(file_path, objects_list)

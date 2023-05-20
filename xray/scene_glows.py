@@ -41,10 +41,33 @@ def read_glows(data, textures):
             read_glows_objects(chunk_data, textures)
 
 
-def read_level_glows(path, textures):
+def read_soc_glows(path, textures):
     data = utils.read_file(path)
     chunked_reader = reader.ChunkedReader(data)
 
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == CHUNK_GLOWS:
             read_glows(chunk_data, textures)
+
+
+def read_cop_glows(path, textures):
+    glows = xray.ltx.LtxParser()
+    glows.from_file(path)
+
+    for section in glows.sections.values():
+        if not section.name.startswith('object_'):
+            continue
+
+        for param_name, param_value in section.params.items():
+            if param_name == 'texture_name':
+                textures.add(param_value)
+
+
+def read_level_glows(file_path, textures):
+    try:
+        # cop
+        read_cop_glows(file_path, textures)
+
+    except:
+        # soc
+        read_soc_glows(file_path, textures)
