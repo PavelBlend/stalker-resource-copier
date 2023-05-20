@@ -273,8 +273,8 @@ def save_settings(fs_path, out_folder):
 def report_total_time(start_time):
     end_time = time.time()
     total_time = end_time - start_time
-    total_time_str = 'total time: {} sec'.format(round(total_time, 2))
-    timer_label.configure(text=total_time_str)
+    total_time_str = 'total time:    {} sec'.format(round(total_time, 2))
+    status_label.configure(text=total_time_str, bg=LABEL_COLOR)
 
 
 def copy_resource():
@@ -282,7 +282,7 @@ def copy_resource():
     fs_path = fs_path_ent.get()
     fs_path = fs_path.replace('/', os.sep)
     if not os.path.exists(fs_path):
-        error_label.configure(text='ERROR: fs.ltx does not exist!')
+        status_label.configure(text='ERROR: fs.ltx does not exist!', bg=ERROR_COLOR)
         return
     fs = xray.ltx.LtxParser()
     fs.from_file(fs_path)
@@ -292,14 +292,14 @@ def copy_resource():
     if not os.path.exists(out_folder):
         os.makedirs(out_folder)
     if os.listdir(out_folder):
-        error_label.configure(text='ERROR: Output folder is not empty!')
+        status_label.configure(text='ERROR: Output folder is not empty!', bg=ERROR_COLOR)
         return
     level_dir = os.path.join(fs_dir, fs.values['$maps$'])
     missing_files = set()
     output_level_dir = os.path.join(out_folder, fs.values['$maps$'])
     level_name = level_name_var.get()
-    if level_name == '-- None --':
-        error_label.configure(text='ERROR: Level not selected!')
+    if level_name == NONE_LEVEL:
+        status_label.configure(text='ERROR: Level not selected!', bg=ERROR_COLOR)
         return
     level_folder = os.path.join(level_dir, level_name)
     level_main_file_path = os.path.join(level_dir, level_name) + os.extsep + 'level'
@@ -417,7 +417,7 @@ def copy_resource():
 
     write_log(missing_files)
     save_settings(fs_path, out_folder)
-    error_label.configure(text='')
+    status_label.configure(text='')
     report_total_time(start_time)
 
 
@@ -471,12 +471,14 @@ BACKGROUND_COLOR = '#808080'
 ACTIVE_BACKGROUND_COLOR = '#A0A0A0'
 BUTTON_COLOR = '#A0A0A0'
 LABEL_COLOR = '#707070'
+ERROR_COLOR = '#BC0000'
 ACTIVE_BUTTON_COLOR = '#B3B3B3'
 URL_COLOR = '#00007C'
 BUTTON_FONT = ('Font', 10, 'bold')
 LABEL_FONT = ('Font', 8, 'bold')
 ENTRY_FONT = ('Font', 7, 'bold')
-COPY_RES_TEXT = 'Copy Resource'
+COPY_RES_TEXT = 'copy resource'
+NONE_LEVEL = '-- none --'
 BUTTON_WIDTH = 13
 BUTTON_HEIGHT = 1
 
@@ -499,24 +501,45 @@ fs_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
 output_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
 # buttons
 copy_resource_button = tkinter.Button(
-    frame, text=COPY_RES_TEXT, width=BUTTON_WIDTH, height=BUTTON_HEIGHT,
-    bg=BUTTON_COLOR, activebackground=ACTIVE_BUTTON_COLOR, font=BUTTON_FONT,
+    frame,
+    text=COPY_RES_TEXT,
+    width=BUTTON_WIDTH,
+    height=BUTTON_HEIGHT,
+    bg=BUTTON_COLOR,
+    activebackground=ACTIVE_BUTTON_COLOR,
+    font=ENTRY_FONT,
     command=copy_resource
 )
-open_fs_button = tkinter.Button(frame, text='Open', command=open_fs, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
-set_output_button = tkinter.Button(frame, text='Set', command=set_output, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
+open_fs_button = tkinter.Button(frame, text='open', command=open_fs, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
+set_output_button = tkinter.Button(frame, text='set', command=set_output, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
 # labels
-ver_label = tkinter.Label(frame, text='Version:    {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=LABEL_COLOR)
+ver_label = tkinter.Label(frame, text='version:    {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=LABEL_COLOR)
 date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
 date_label = tkinter.Label(frame, text=date_text, font=LABEL_FONT, bg=LABEL_COLOR)
 github_label = tkinter.Label(frame, text=GITHUB_REPO_URL, font=LABEL_FONT, bg=LABEL_COLOR, fg=URL_COLOR, cursor="hand2")
-timer_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=BACKGROUND_COLOR)
-error_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=BACKGROUND_COLOR, fg='#BC0000')
-fs_path_label = tkinter.Label(frame, text='fs.ltx', font=LABEL_FONT, bg=LABEL_COLOR)
-output_path_label = tkinter.Label(frame, text='output', font=LABEL_FONT, bg=LABEL_COLOR)
-level_name_label = tkinter.Label(frame, text='level', font=LABEL_FONT, bg=LABEL_COLOR)
-# menus
-level_list = ['-- None --', ]
+status_text_label = tkinter.Label(frame, text='status:', font=LABEL_FONT, bg=LABEL_COLOR)
+status_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=LABEL_COLOR)
+fs_path_label = tkinter.Label(frame, text='fs.ltx:', font=LABEL_FONT, bg=LABEL_COLOR)
+output_path_label = tkinter.Label(frame, text='output:', font=LABEL_FONT, bg=LABEL_COLOR)
+mode_label = tkinter.Label(frame, text='mode:', font=LABEL_FONT, bg=LABEL_COLOR)
+level_name_label = tkinter.Label(frame, text='level:', font=LABEL_FONT, bg=LABEL_COLOR)
+
+# mode menu
+modes = ['source level', 'game level']
+mode_var = tkinter.StringVar()
+mode_var.set(modes[0])
+mode_menu = tkinter.OptionMenu(frame, mode_var, *modes)
+mode_menu['menu'].config(font=LABEL_FONT, bg=BACKGROUND_COLOR)
+mode_menu['highlightthickness'] = 0
+mode_menu.config(
+    font=LABEL_FONT,
+    bg=BACKGROUND_COLOR,
+    activebackground=ACTIVE_BACKGROUND_COLOR,
+    width=32
+)
+
+# source files menu
+level_list = [NONE_LEVEL, ]
 level_name_var = tkinter.StringVar()
 level_name_var.set(level_list[0])
 level_list_menu = tkinter.OptionMenu(frame, level_name_var, *level_list)
@@ -560,6 +583,12 @@ output_path_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_he
 output_path_ent.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
 set_output_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height+1)
 
+# mode
+fs_y += (pad + ver_height) / WINDOW_HEIGHT
+mode_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
+mode_width = (WINDOW_WIDTH - pad) - (fs_width + pad*2)
+mode_menu.place(relx=ent_x, rely=fs_y, width=mode_width, height=ver_height)
+
 # level
 fs_y += (pad + ver_height) / WINDOW_HEIGHT
 level_name_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
@@ -569,10 +598,10 @@ fs_y += (pad + ver_height) / WINDOW_HEIGHT
 
 github_label.place(relx=ent_x, rely=pad_y_rel, width=ent_width, height=ver_height)
 
-copy_resource_button.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
+status_text_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
+status_label.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
 
-timer_label.place(relx=0.15, rely=0.6, width=ent_width, height=ver_height)
-error_label.place(relx=0.15, rely=0.7, width=ent_width, height=ver_height)
+copy_resource_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height)
 
 # bind
 github_label.bind('<Button-1>', visit_repo_page)
