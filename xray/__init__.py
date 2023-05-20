@@ -7,3 +7,4 @@ from . import scene_objects
 from . import scene_details
 from . import scene_glows
 from . import scene_wallmarks
+from . import game_level
