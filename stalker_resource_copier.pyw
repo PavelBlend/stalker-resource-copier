@@ -20,10 +20,6 @@ MISSIGNG_FILES = 'These files are not copied because they are missing:\n\n'
 ALL_COPIED = 'All files are copied.'
 
 
-def visit_repo_page(event):
-    webbrowser.open(GITHUB_REPO_URL)
-
-
 def copy_file(src, output, missing_files):
     if os.path.exists(src):
         out_dir_name = os.path.dirname(output.lower())
@@ -425,6 +421,10 @@ def copy_resource():
     report_total_time(start_time)
 
 
+def visit_repo_page(event):
+    webbrowser.open(GITHUB_REPO_URL)
+
+
 def set_output():
     dir_path = tkinter.filedialog.askdirectory()
     if dir_path:
@@ -461,11 +461,12 @@ def open_fs():
         add_levels_to_list(file_path)
 
 
-WINDOW_HEIGHT = 240
 WINDOW_WIDTH = 640
+WINDOW_HEIGHT = 240
 BACKGROUND_COLOR = '#808080'
 ACTIVE_BACKGROUND_COLOR = '#A0A0A0'
 BUTTON_COLOR = '#A0A0A0'
+LABEL_COLOR = '#707070'
 ACTIVE_BUTTON_COLOR = '#B3B3B3'
 URL_COLOR = '#00007C'
 BUTTON_FONT = ('Font', 10, 'bold')
@@ -480,11 +481,13 @@ root = tkinter.Tk()
 root.resizable(height=False, width=False)
 root.minsize(width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
 root.maxsize(width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
-root.title('S.T.A.L.K.E.R. Resource Copier {0}.{1}.{2}'.format(*VERSION))
+root.title('S.T.A.L.K.E.R. Resource Copier')
 root['bg'] = BACKGROUND_COLOR
-root_pos_x = (root.winfo_screenwidth()) / 2
-root_pos_y = (root.winfo_screenheight()) / 2
-root.geometry('+%d+%d' % (root_pos_x - WINDOW_WIDTH / 2, root_pos_y - WINDOW_HEIGHT / 2 - 50))
+display_center_x = (root.winfo_screenwidth()) / 2
+display_center_y = (root.winfo_screenheight()) / 2
+root_pos_x = display_center_x - WINDOW_WIDTH / 2
+root_pos_y = display_center_y - WINDOW_HEIGHT / 2 - 50
+root.geometry('+%d+%d' % (root_pos_x, root_pos_y))
 
 frame = tkinter.Frame(root, bg=BACKGROUND_COLOR, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
 # entry
@@ -499,51 +502,73 @@ copy_resource_button = tkinter.Button(
 open_fs_button = tkinter.Button(frame, text='Open', command=open_fs, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
 set_output_button = tkinter.Button(frame, text='Set', command=set_output, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
 # labels
-ver_label = tkinter.Label(frame, text='version {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=BACKGROUND_COLOR)
+ver_label = tkinter.Label(frame, text='Version:    {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=LABEL_COLOR)
 date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
-date_label = tkinter.Label(frame, text=date_text, font=LABEL_FONT, bg=BACKGROUND_COLOR)
-github_label = tkinter.Label(frame, text=GITHUB_REPO_URL, font=LABEL_FONT, bg=BACKGROUND_COLOR, fg=URL_COLOR, cursor="hand2")
+date_label = tkinter.Label(frame, text=date_text, font=LABEL_FONT, bg=LABEL_COLOR)
+github_label = tkinter.Label(frame, text=GITHUB_REPO_URL, font=LABEL_FONT, bg=LABEL_COLOR, fg=URL_COLOR, cursor="hand2")
 timer_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=BACKGROUND_COLOR)
 error_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=BACKGROUND_COLOR, fg='#BC0000')
-fs_path_label = tkinter.Label(frame, text='fs.ltx', font=LABEL_FONT, bg=BACKGROUND_COLOR)
-output_path_label = tkinter.Label(frame, text='output', font=LABEL_FONT, bg=BACKGROUND_COLOR)
-level_name_label = tkinter.Label(frame, text='level path', font=LABEL_FONT, bg=BACKGROUND_COLOR)
+fs_path_label = tkinter.Label(frame, text='fs.ltx', font=LABEL_FONT, bg=LABEL_COLOR)
+output_path_label = tkinter.Label(frame, text='output', font=LABEL_FONT, bg=LABEL_COLOR)
+level_name_label = tkinter.Label(frame, text='level', font=LABEL_FONT, bg=LABEL_COLOR)
 # menus
 level_list = ['-- None --', ]
 level_name_var = tkinter.StringVar()
 level_name_var.set(level_list[0])
 level_list_menu = tkinter.OptionMenu(frame, level_name_var, *level_list)
 level_list_menu['menu'].config(font=LABEL_FONT, bg=BACKGROUND_COLOR)
+level_list_menu['highlightthickness'] = 0
 level_list_menu.config(
-    font=LABEL_FONT, bg=BACKGROUND_COLOR,
-    activebackground=ACTIVE_BACKGROUND_COLOR, width=32
+    font=LABEL_FONT,
+    bg=BACKGROUND_COLOR,
+    activebackground=ACTIVE_BACKGROUND_COLOR,
+    width=32
 )
 
-frame.grid(row=0,  column=0, pady=10)
 cur_row = 0
-fs_path_label.grid(row=cur_row,  column=0, padx=10)
-fs_path_ent.grid(row=cur_row,  column=1, padx=0)
-open_fs_button.grid(row=cur_row,  column=2, padx=0)
-cur_row += 1
-output_path_label.grid(row=cur_row,  column=0, padx=10)
-output_path_ent.grid(row=cur_row,  column=1, padx=0)
-set_output_button.grid(row=cur_row,  column=2, padx=0)
-cur_row += 1
-level_name_label.grid(row=cur_row,  column=0, padx=0)
-level_list_menu.grid(row=cur_row,  column=1, padx=0)
-cur_row += 1
-copy_resource_button.grid(row=cur_row,  column=1, padx=10)
-cur_row += 1
-ver_label.grid(row=cur_row,  column=1, padx=10)
-cur_row += 1
-date_label.grid(row=cur_row,  column=1, padx=10)
-cur_row += 1
-github_label.grid(row=cur_row,  column=1, padx=10)
-cur_row += 1
-timer_label.grid(row=cur_row,  column=1, padx=10)
-cur_row += 1
-error_label.grid(row=cur_row,  column=1, padx=10)
-cur_row += 1
+frame.grid(row=0, column=0, pady=0)
+
+pad = 5
+pad_x_rel = pad / WINDOW_WIDTH
+pad_y_rel = pad / WINDOW_HEIGHT
+
+ver_width = 100
+ver_x = 1.0 - (ver_width+pad) / WINDOW_WIDTH
+ver_height = 20
+date_width = 70
+ver_label.place(relx=ver_x, rely=pad_y_rel, width=ver_width, height=ver_height)
+date_label.place(relx=pad_x_rel, rely=pad_y_rel, width=date_width, height=ver_height)
+
+# fs.ltx
+fs_y = (pad*2 + ver_height) / WINDOW_HEIGHT
+fs_width = 70
+fs_path_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
+
+ent_x = fs_width / WINDOW_WIDTH + pad_x_rel * 2
+ent_width = (WINDOW_WIDTH - pad*2 - ver_width) - (fs_width + pad*2)
+fs_path_ent.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
+
+open_fs_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height+1)
+
+# output
+fs_y += (pad + ver_height) / WINDOW_HEIGHT
+output_path_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
+output_path_ent.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
+set_output_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height+1)
+
+# level
+fs_y += (pad + ver_height) / WINDOW_HEIGHT
+level_name_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
+level_width = (WINDOW_WIDTH - pad) - (fs_width + pad*2)
+level_list_menu.place(relx=ent_x, rely=fs_y, width=level_width, height=ver_height)
+fs_y += (pad + ver_height) / WINDOW_HEIGHT
+
+github_label.place(relx=ent_x, rely=pad_y_rel, width=ent_width, height=ver_height)
+
+copy_resource_button.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
+
+timer_label.place(relx=0.15, rely=0.6, width=ent_width, height=ver_height)
+error_label.place(relx=0.15, rely=0.7, width=ent_width, height=ver_height)
 
 # bind
 github_label.bind('<Button-1>', visit_repo_page)
@@ -553,10 +578,14 @@ if os.path.exists(SETTINGS_FILE_NAME):
     settings_parser = xray.ltx.LtxParser()
     settings_parser.from_file(SETTINGS_FILE_NAME)
     default_settings = settings_parser.sections.get('default_settings', None)
+
     if default_settings:
         fs_path_ent.delete(0, last=tkinter.END)
         fs_path_ent.insert(0, default_settings.params[FS_PATH_PROP])
-        add_levels_to_list(default_settings.params[FS_PATH_PROP])
+
         output_path_ent.delete(0, last=tkinter.END)
         output_path_ent.insert(0, default_settings.params[OUT_FOLDER_PROP])
+
+        add_levels_to_list(default_settings.params[FS_PATH_PROP])
+
 root.mainloop()
