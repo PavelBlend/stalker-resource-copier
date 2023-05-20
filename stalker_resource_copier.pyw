@@ -428,6 +428,8 @@ def visit_repo_page(event):
 def set_output():
     dir_path = tkinter.filedialog.askdirectory()
     if dir_path:
+        dir_path = dir_path.replace('\\', os.sep)
+        dir_path = dir_path.replace('/', os.sep)
         output_path_ent.delete(0, last=tkinter.END)
         output_path_ent.insert(0, dir_path)
 
@@ -456,6 +458,8 @@ def add_levels_to_list(file_path):
 def open_fs():
     file_path = tkinter.filedialog.askopenfilename()
     if file_path:
+        file_path = file_path.replace('\\', os.sep)
+        file_path = file_path.replace('/', os.sep)
         fs_path_ent.delete(0, last=tkinter.END)
         fs_path_ent.insert(0, file_path)
         add_levels_to_list(file_path)
@@ -580,11 +584,17 @@ if os.path.exists(SETTINGS_FILE_NAME):
     default_settings = settings_parser.sections.get('default_settings', None)
 
     if default_settings:
+        fs_path = default_settings.params[FS_PATH_PROP]
+        fs_path = fs_path.replace('\\', os.sep)
+        fs_path = fs_path.replace('/', os.sep)
         fs_path_ent.delete(0, last=tkinter.END)
-        fs_path_ent.insert(0, default_settings.params[FS_PATH_PROP])
+        fs_path_ent.insert(0, fs_path)
 
+        out_path = default_settings.params[OUT_FOLDER_PROP]
+        out_path = out_path.replace('\\', os.sep)
+        out_path = out_path.replace('/', os.sep)
         output_path_ent.delete(0, last=tkinter.END)
-        output_path_ent.insert(0, default_settings.params[OUT_FOLDER_PROP])
+        output_path_ent.insert(0, out_path)
 
         add_levels_to_list(default_settings.params[FS_PATH_PROP])
 
