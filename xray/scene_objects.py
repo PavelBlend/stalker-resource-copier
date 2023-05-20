@@ -1,4 +1,5 @@
 from . import utils
+from . import reader
 
 
 # scene objects chunks
@@ -13,18 +14,18 @@ EOBJ_CHUNK_REFERENCE = 0x0902
 
 
 def read_object_data(data, objects_list):
-    chunked_reader = xray.reader.ChunkedReader(data)
+    chunked_reader = reader.ChunkedReader(data)
 
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == EOBJ_CHUNK_REFERENCE:
-            packed_reader = xray.reader.PackedReader(chunk_data)
+            packed_reader = reader.PackedReader(chunk_data)
             packed_reader.skip(8)    # "<2I" file_version and unknown
             reference = packed_reader.gets()
             objects_list.add(reference)
 
 
 def read_object(data, objects_list):
-    object_reader = xray.reader.ChunkedReader(data)
+    object_reader = reader.ChunkedReader(data)
 
     for chunk_id, chunk_data in object_reader:
         if chunk_id == TOOLS_CHUNK_OBJECT_DATA:
@@ -32,14 +33,14 @@ def read_object(data, objects_list):
 
 
 def read_objects(data, objects_list):
-    objects_reader = xray.reader.ChunkedReader(data)
+    objects_reader = reader.ChunkedReader(data)
 
     for object_id, object_data in objects_reader:
         read_object(object_data, objects_list)
 
 
 def read_scene_objects(data, objects_list):
-    chunked_reader = xray.reader.ChunkedReader(data)
+    chunked_reader = reader.ChunkedReader(data)
 
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == TOOLS_CHUNK_OBJECTS:
@@ -51,7 +52,7 @@ def read_scene_objects_part(file_path, objects_list):
 
     data = utils.read_file(file_path)
 
-    chunked_reader = xray.reader.ChunkedReader(data)
+    chunked_reader = reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
 
         if chunk_id == CHUNK_SCENE_OBJECTS:

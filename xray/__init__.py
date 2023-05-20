@@ -2,4 +2,8 @@ from . import reader
 from . import ltx
 from . import const
 from . import utils
+from . import object_format
 from . import scene_objects
+from . import scene_details
+from . import scene_glows
+from . import scene_wallmarks

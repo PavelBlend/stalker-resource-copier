@@ -38,12 +38,12 @@ class ChunkedReader:
 
     def __next__(self):
         header_offset = self.offs
-
-        if header_offset >= len(self.data):
-            raise StopIteration
-
         header_format = '<2I'
         header_size = struct.calcsize(header_format)
+
+        if header_offset + header_size >= len(self.data):
+            raise StopIteration
+
         chunk_id, chunk_size = struct.unpack(
             header_format,
             self.data[header_offset : header_offset+header_size]

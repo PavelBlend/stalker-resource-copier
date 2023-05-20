@@ -1,6 +1,7 @@
 import os
 import shutil
 import time
+import webbrowser
 
 from . import const
 
@@ -45,8 +46,21 @@ def write_log(missing_files):
             log_file.write(log_line)
 
 
+def save_settings(fs_path, out_folder):
+    settings_text = '[default_settings]\n'
+    settings_text += '{0} = "{1}"\n'.format(const.FS_PATH_PROP, fs_path)
+    settings_text += '{0} = "{1}"\n'.format(const.OUT_FOLDER_PROP, out_folder)
+
+    with open(const.SETTINGS_FILE_NAME, 'w', encoding='utf-8') as file:
+        file.write(settings_text)
+
+
 def report_total_time(status_label, start_time):
     end_time = time.time()
     total_time = end_time - start_time
     total_time_str = 'total time:    {} sec'.format(round(total_time, 2))
     status_label.configure(text=total_time_str, bg=const.LABEL_COLOR)
+
+
+def visit_repo_page(event):
+    webbrowser.open(GITHUB_REPO_URL)

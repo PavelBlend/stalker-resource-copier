@@ -12,133 +12,6 @@ VERSION = (0, 0, 4)
 DATE = (2021, 7, 26)
 GITHUB_REPO_URL = 'https://github.com/PavelBlend/stalker-resource-copier'
 
-FS_PATH_PROP = 'fs_path'
-OUT_FOLDER_PROP = 'out_folder'
-SETTINGS_FILE_NAME = 'stalker_resource_copier.ini'
-
-
-def read_object_main(data, textures):
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id in (0x0905, 0x0906, 0x0907):    # surfaces
-            reader = xray.reader.PackedReader(chunk_data)
-            surfaces_count = reader.getf('<I')[0]
-            for surface_index in range(surfaces_count):
-                if chunk_id in (0x0906, 0x0907):
-                    name = reader.gets()
-                    eshader = reader.gets()
-                    cshader = reader.gets()
-                    if chunk_id == 0x0907:
-                        gamemtl = reader.gets()
-                    texture = reader.gets()
-                    vmap = reader.gets()
-                    surface_flags = reader.getf('<I')[0]
-                    reader.skip(4 + 4)    # fvf and ?
-                else:
-                    name = reader.gets()
-                    eshader = reader.gets()
-                    reader.skip(1)    # flags
-                    reader.skip(4 + 4)    # fvf and TCs count
-                    texture = reader.gets()
-                    vmap = reader.gets()
-                textures.add(texture)
-        elif chunk_id == 0x0903:    # flags (object type)
-            reader = xray.reader.PackedReader(chunk_data)
-            flags = reader.getf('I')[0]
-    return flags
-
-
-def get_object_textures(object_path, textures):
-    with open(object_path, 'rb') as file:
-        data = file.read()
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0x7777:    # main
-            flags = read_object_main(chunk_data, textures)
-            if flags == 0x1:    # multiple usage
-                object_type = 'MULIPLE_USAGE'
-            else:
-                object_type = None
-            return object_type
-
-
-def read_glow_data(data, textures):
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0xc415:
-            packed_reader = xray.reader.PackedReader(chunk_data)
-            texture = packed_reader.gets()
-            textures.add(texture)
-
-
-def read_glow(data, textures):
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0x7777:
-            read_glow_data(chunk_data, textures)
-
-
-def read_glows_objects(data, textures):
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for glow_index, glow_data in chunked_reader:
-        read_glow(glow_data, textures)
-
-
-def read_glows(data, textures):
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0x3:
-            read_glows_objects(chunk_data, textures)
-
-
-def read_level_glows(glows_path, textures):
-    with open(glows_path, 'rb') as file:
-        data = file.read()
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0x8001:
-            read_glows(chunk_data, textures)
-
-
-def read_wallmark_object(data, textures):
-    packed_reader = xray.reader.PackedReader(data)
-    item_count = packed_reader.getf('<I')[0]
-    shader_name = packed_reader.gets()
-    tex_name = packed_reader.gets()
-    textures.add(tex_name)
-    for item_index in range(item_count):
-        packed_reader.skip(1)    # flags
-        packed_reader.skip(3 * 4 * 2)    # bbox
-        packed_reader.skip(3 * 4 + 4)    # bounds
-        packed_reader.skip(3 * 4)    # w, h, r
-        vertices_count = packed_reader.getf('<I')[0]
-        for vert_index in range(vertices_count):
-            packed_reader.skip(3 * 4)    # position
-            packed_reader.skip(4)    # color
-            packed_reader.skip(2 * 4)    # uv
-
-
-def read_wallmarks_objects(data, textures):
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        read_wallmark_object(chunk_data, textures)
-
-
-def read_wallmarks(data, textures):
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0x0005:
-            read_wallmarks_objects(chunk_data, textures)
-
-
-def read_level_wallmarks(wallmark_path, textures):
-    with open(wallmark_path, 'rb') as file:
-        data = file.read()
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0x800e:
-            read_wallmarks(chunk_data, textures)
-
 
 def copy_textures(
         textures,
@@ -173,15 +46,6 @@ def copy_textures(
 
         for src, dist in texs:
             xray.utils.copy_file(src, dist, missing_files)
-
-
-def save_settings(fs_path, out_folder):
-    settings_text = '[default_settings]\n'
-    settings_text += '{0} = "{1}"\n'.format(FS_PATH_PROP, fs_path)
-    settings_text += '{0} = "{1}"\n'.format(OUT_FOLDER_PROP, out_folder)
-
-    with open(SETTINGS_FILE_NAME, 'w', encoding='utf-8') as file:
-        file.write(settings_text)
 
 
 def copy_resource():
@@ -238,7 +102,7 @@ def copy_resource():
                     xray.scene_objects.read_scene_objects_part(level_path, objects_list)
             elif level_file == 'detail_object.part':
                 details_path = os.path.join(level_folder, level_file)
-                read_level_details(details_path, objects_list, textures)
+                xray.scene_details.read_level_details(details_path, objects_list, textures)
             elif level_file == 'glow.part':
                 try:
                     # cop
@@ -252,10 +116,10 @@ def copy_resource():
                 except:
                     # soc
                     level_path = os.path.join(level_folder, level_file)
-                    read_level_glows(level_path, textures)
+                    xray.scene_glows.read_level_glows(level_path, textures)
             elif level_file == 'wallmark.part':
                 wallmark_path = os.path.join(level_folder, level_file)
-                read_level_wallmarks(wallmark_path, textures)
+                xray.scene_wallmarks.read_level_wallmarks(wallmark_path, textures)
     objects_list = list(objects_list)
     objects_list.sort()
     objects_folder = os.path.join(fs_dir, fs.values['$objects$'])
@@ -279,7 +143,7 @@ def copy_resource():
             if not os.path.exists(object_dir):
                 os.makedirs(object_dir)
             shutil.copyfile(object_path, out_object_path)
-            object_type = get_object_textures(object_path, textures)
+            object_type = xray.object_format.get_object_textures(object_path, textures)
             if object_type == 'MULIPLE_USAGE':
                 lod_tex_path = 'lod' + os.sep + 'lod_' + object_name.replace(os.sep, '_')
                 # source paths
@@ -323,13 +187,9 @@ def copy_resource():
     )
 
     xray.utils.write_log(missing_files)
-    save_settings(fs_path, out_folder)
+    xray.utils.save_settings(fs_path, out_folder)
     status_label.configure(text='')
     xray.utils.report_total_time(status_label, start_time)
-
-
-def visit_repo_page(event):
-    webbrowser.open(GITHUB_REPO_URL)
 
 
 def set_output():
@@ -510,27 +370,27 @@ status_label.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
 copy_resource_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height)
 
 # bind
-github_label.bind('<Button-1>', visit_repo_page)
+github_label.bind('<Button-1>', xray.utils.visit_repo_page)
 
 # settings
-if os.path.exists(SETTINGS_FILE_NAME):
+if os.path.exists(xray.const.SETTINGS_FILE_NAME):
     settings_parser = xray.ltx.LtxParser()
-    settings_parser.from_file(SETTINGS_FILE_NAME)
+    settings_parser.from_file(xray.const.SETTINGS_FILE_NAME)
     default_settings = settings_parser.sections.get('default_settings', None)
 
     if default_settings:
-        fs_path = default_settings.params[FS_PATH_PROP]
+        fs_path = default_settings.params[xray.const.FS_PATH_PROP]
         fs_path = fs_path.replace('\\', os.sep)
         fs_path = fs_path.replace('/', os.sep)
         fs_path_ent.delete(0, last=tkinter.END)
         fs_path_ent.insert(0, fs_path)
 
-        out_path = default_settings.params[OUT_FOLDER_PROP]
+        out_path = default_settings.params[xray.const.OUT_FOLDER_PROP]
         out_path = out_path.replace('\\', os.sep)
         out_path = out_path.replace('/', os.sep)
         output_path_ent.delete(0, last=tkinter.END)
         output_path_ent.insert(0, out_path)
 
-        add_levels_to_list(default_settings.params[FS_PATH_PROP])
+        add_levels_to_list(default_settings.params[xray.const.FS_PATH_PROP])
 
 root.mainloop()
