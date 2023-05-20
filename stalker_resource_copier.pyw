@@ -1,5 +1,9 @@
-import tkinter, time, os, shutil, webbrowser
-from tkinter import filedialog
+import os
+import time
+import shutil
+import webbrowser
+import tkinter
+import tkinter.filedialog
 
 import xray
 
@@ -378,9 +382,10 @@ def copy_resource():
 
 
 def set_output():
-    dir_path = filedialog.askdirectory()
-    output_path_ent.delete(0, last=tkinter.END)
-    output_path_ent.insert(0, dir_path)
+    dir_path = tkinter.filedialog.askdirectory()
+    if dir_path:
+        output_path_ent.delete(0, last=tkinter.END)
+        output_path_ent.insert(0, dir_path)
 
 
 def add_levels_to_list(file_path):
@@ -405,10 +410,11 @@ def add_levels_to_list(file_path):
 
 
 def open_fs():
-    file_path = filedialog.askopenfilename()
-    fs_path_ent.delete(0, last=tkinter.END)
-    fs_path_ent.insert(0, file_path)
-    add_levels_to_list(file_path)
+    file_path = tkinter.filedialog.askopenfilename()
+    if file_path:
+        fs_path_ent.delete(0, last=tkinter.END)
+        fs_path_ent.insert(0, file_path)
+        add_levels_to_list(file_path)
 
 
 WINDOW_HEIGHT = 240
