@@ -208,7 +208,9 @@ def copy_resource():
     if not os.path.exists(fs_path):
         error_label.configure(text='ERROR: fs.ltx does not exist!')
         return
-    fs = xray_ltx.StalkerLtxParser(fs_path)
+    fs = xray_ltx.LtxParser()
+    fs.from_file(fs_path)
+    fs_dir = os.path.dirname(fs_path)
     out_folder = output_path_ent.get()
     out_folder = out_folder.replace('/', os.sep)
     if not os.path.exists(out_folder):
@@ -216,9 +218,9 @@ def copy_resource():
     if os.listdir(out_folder):
         error_label.configure(text='ERROR: Output folder is not empty!')
         return
-    level_dir = fs.values['$maps$']
+    level_dir = os.path.join(fs_dir, fs.values['$maps$'])
     missing_files = set()
-    output_level_dir = os.path.join(out_folder, fs.values_relative['$maps$'])
+    output_level_dir = os.path.join(out_folder, fs.values['$maps$'])
     level_name = level_name_var.get()
     if level_name == '-- None --':
         error_label.configure(text='ERROR: Level not selected!')
@@ -240,7 +242,8 @@ def copy_resource():
             if level_file == 'scene_object.part':
                 try:
                     # cop
-                    objects = xray_ltx.StalkerLtxParser(os.path.join(level_folder, level_file))
+                    objects = xray_ltx.LtxParser()
+                    objects.from_file(os.path.join(level_folder, level_file))
                     for section in objects.sections.values():
                         if section.name.startswith('object_'):
                             for param_name, param_value in section.params.items():
@@ -256,7 +259,8 @@ def copy_resource():
             elif level_file == 'glow.part':
                 try:
                     # cop
-                    glows = xray_ltx.StalkerLtxParser(os.path.join(level_folder, level_file))
+                    glows = xray_ltx.LtxParser()
+                    glows.from_file(os.path.join(level_folder, level_file))
                     for section in glows.sections.values():
                         if section.name.startswith('object_'):
                             for param_name, param_value in section.params.items():
@@ -271,13 +275,13 @@ def copy_resource():
                 read_level_wallmarks(wallmark_path, textures)
     objects_list = list(objects_list)
     objects_list.sort()
-    objects_folder = fs.values['$objects$']
-    out_objects_folder = os.path.join(out_folder, fs.values_relative['$objects$'])
+    objects_folder = os.path.join(fs_dir, fs.values['$objects$'])
+    out_objects_folder = os.path.join(out_folder, fs.values['$objects$'])
 
-    game_textures_folder = fs.values['$game_textures$']
-    raw_textures_folder = fs.values['$textures$']
-    out_game_tex_folder = os.path.join(out_folder, fs.values_relative['$game_textures$'])
-    out_raw_tex_folder = os.path.join(out_folder, fs.values_relative['$textures$'])
+    game_textures_folder = os.path.join(fs_dir, fs.values['$game_textures$'])
+    raw_textures_folder = os.path.join(fs_dir, fs.values['$textures$'])
+    out_game_tex_folder = os.path.join(out_folder, fs.values['$game_textures$'])
+    out_raw_tex_folder = os.path.join(out_folder, fs.values['$textures$'])
 
     if not os.path.exists(out_objects_folder):
         os.makedirs(out_objects_folder)
@@ -383,8 +387,10 @@ def add_levels_to_list(file_path):
     if file_path and os.path.exists(file_path):
         menu = level_list_menu['menu']
         menu.delete(0, "end")
-        fs = xray_ltx.StalkerLtxParser(file_path)
-        maps_dir = fs.values['$maps$']
+        fs = xray_ltx.LtxParser()
+        fs.from_file(file_path)
+        fs_dir = os.path.dirname(file_path)
+        maps_dir = os.path.join(fs_dir, fs.values['$maps$'])
         for root, dirs, files in os.walk(maps_dir):
             for level_file in files:
                 level_abs_path = os.path.join(root, level_file)
@@ -495,8 +501,9 @@ github_label.bind('<Button-1>', visit_repo_page)
 # settings
 settings_file_name = 'stalker_resource_copier.ini'
 if os.path.exists(settings_file_name):
-    settings = xray_ltx.StalkerLtxParser(settings_file_name)
-    default_settings = settings.sections.get('default_settings', None)
+    settings_parser = xray_ltx.LtxParser()
+    settings_parser.from_file(settings_file_name)
+    default_settings = settings_parser.sections.get('default_settings', None)
     if default_settings:
         fs_path_ent.delete(0, last=tkinter.END)
         fs_path_ent.insert(0, default_settings.params['fs_path'])
