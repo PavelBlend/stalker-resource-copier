@@ -42,6 +42,7 @@ def copy_resource():
     # collect objects and textures
     objects_list = set()
     textures = set()
+    sounds = set()
     missing_files = set()
 
     if mode == 'source level':
@@ -70,6 +71,9 @@ def copy_resource():
 
                 elif level_file == 'wallmark.part':
                     xray.scene_wallmarks.read_level_wallmarks(file_path, textures)
+
+                elif level_file == 'sound_src.part':
+                    xray.scene_sound_source.read_sound_sources(file_path, sounds)
 
     else:
         # game level
@@ -153,13 +157,32 @@ def copy_resource():
                 missing_files.add(thm_path)
 
     # copy textures *.dds, *.tga, *.thm
-    xray.utils.copy_textures(
+    xray.utils.copy_files(
         textures,
         missing_files,
         game_textures_folder,
         raw_textures_folder,
         out_game_tex_folder,
-        out_raw_tex_folder
+        out_raw_tex_folder,
+        'dds',
+        'tga'
+    )
+
+    # copy sounds *.ogg, *.wav, *.thm
+    game_sounds_folder = os.path.join(fs_dir, fs.values['$game_sounds$'])
+    raw_sounds_folder = os.path.join(fs_dir, fs.values['$sounds$'])
+    out_game_sounds_folder = os.path.join(out_folder, fs.values['$game_sounds$'])
+    out_raw_sounds_folder = os.path.join(out_folder, fs.values['$sounds$'])
+
+    xray.utils.copy_files(
+        sounds,
+        missing_files,
+        game_sounds_folder,
+        raw_sounds_folder,
+        out_game_sounds_folder,
+        out_raw_sounds_folder,
+        'ogg',
+        'wav'
     )
 
     if mode == 'source level':

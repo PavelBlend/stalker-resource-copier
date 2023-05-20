@@ -67,36 +67,38 @@ def visit_repo_page(event):
     webbrowser.open(GITHUB_REPO_URL)
 
 
-def copy_textures(
-        textures,
+def copy_files(
+        files,
         missing_files,
-        game_textures_folder,
-        raw_textures_folder,
-        out_game_tex_folder,
-        out_raw_tex_folder
+        game_folder,
+        raw_folder,
+        out_game_folder,
+        out_raw_folder,
+        game_ext,
+        raw_ext
     ):
 
-    textures = list(textures)
-    textures.sort()
+    files = list(files)
+    files.sort()
 
-    for texture in textures:
+    for file in files:
         # source paths
-        game_tex_path = os.path.join(game_textures_folder, texture + os.extsep + 'dds')
-        game_thm_path = os.path.join(game_textures_folder, texture + os.extsep + 'thm')
-        raw_tex_path = os.path.join(raw_textures_folder, texture + os.extsep + 'tga')
-        raw_thm_path = os.path.join(raw_textures_folder, texture + os.extsep + 'thm')
+        game_file_path = os.path.join(game_folder, file + os.extsep + game_ext)
+        game_thm_path = os.path.join(game_folder, file + os.extsep + 'thm')
+        raw_file_path = os.path.join(raw_folder, file + os.extsep + raw_ext)
+        raw_thm_path = os.path.join(raw_folder, file + os.extsep + 'thm')
 
         # output paths
-        out_game_tex_path = os.path.join(out_game_tex_folder, texture + os.extsep + 'dds')
-        out_raw_tex_path = os.path.join(out_raw_tex_folder, texture + os.extsep + 'tga')
-        out_thm_path = os.path.join(out_game_tex_folder, texture + os.extsep + 'thm')
+        out_game_path = os.path.join(out_game_folder, file + os.extsep + game_ext)
+        out_raw_path = os.path.join(out_raw_folder, file + os.extsep + raw_ext)
+        out_thm_path = os.path.join(out_game_folder, file + os.extsep + 'thm')
 
-        texs = [
-            [game_tex_path, out_game_tex_path],
-            [raw_tex_path, out_raw_tex_path],
+        copy_files_list = [
+            [game_file_path, out_game_path],
+            [raw_file_path, out_raw_path],
             [game_thm_path, out_thm_path],
             [raw_thm_path, out_thm_path]
         ]
 
-        for src, dist in texs:
+        for src, dist in copy_files_list:
             copy_file(src, dist, missing_files)
