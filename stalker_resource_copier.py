@@ -13,75 +13,42 @@ DATE = (2021, 7, 26)
 GITHUB_REPO_URL = 'https://github.com/PavelBlend/stalker-resource-copier'
 
 
-def copy_textures(
-        textures,
-        missing_files,
-        game_textures_folder,
-        raw_textures_folder,
-        out_game_tex_folder,
-        out_raw_tex_folder
-    ):
-
-    textures = list(textures)
-    textures.sort()
-
-    for texture in textures:
-        # source paths
-        game_tex_path = os.path.join(game_textures_folder, texture + os.extsep + 'dds')
-        game_thm_path = os.path.join(game_textures_folder, texture + os.extsep + 'thm')
-        raw_tex_path = os.path.join(raw_textures_folder, texture + os.extsep + 'tga')
-        raw_thm_path = os.path.join(raw_textures_folder, texture + os.extsep + 'thm')
-
-        # output paths
-        out_game_tex_path = os.path.join(out_game_tex_folder, texture + os.extsep + 'dds')
-        out_raw_tex_path = os.path.join(out_raw_tex_folder, texture + os.extsep + 'tga')
-        out_thm_path = os.path.join(out_game_tex_folder, texture + os.extsep + 'thm')
-
-        texs = [
-            [game_tex_path, out_game_tex_path],
-            [raw_tex_path, out_raw_tex_path],
-            [game_thm_path, out_thm_path],
-            [raw_thm_path, out_thm_path]
-        ]
-
-        for src, dist in texs:
-            xray.utils.copy_file(src, dist, missing_files)
-
-
 def copy_resource():
     start_time = time.time()
+
     fs_path = fs_path_ent.get()
     fs_path = fs_path.replace('/', os.sep)
+
     if not os.path.exists(fs_path):
         status_label.configure(text='ERROR: fs.ltx does not exist!', bg=ERROR_COLOR)
         return
+
     fs = xray.ltx.LtxParser()
     fs.from_file(fs_path)
     fs_dir = os.path.dirname(fs_path)
+
     out_folder = output_path_ent.get()
     out_folder = out_folder.replace('/', os.sep)
+
     if not os.path.exists(out_folder):
         os.makedirs(out_folder)
+
     if os.listdir(out_folder):
         status_label.configure(text='ERROR: Output folder is not empty!', bg=ERROR_COLOR)
         return
+
     level_dir = os.path.join(fs_dir, fs.values['$maps$'])
     missing_files = set()
     output_level_dir = os.path.join(out_folder, fs.values['$maps$'])
     level_name = level_name_var.get()
+
     if level_name == NONE_LEVEL:
         status_label.configure(text='ERROR: Level not selected!', bg=ERROR_COLOR)
         return
+
     level_folder = os.path.join(level_dir, level_name)
-    level_main_file_path = os.path.join(level_dir, level_name) + os.extsep + 'level'
-    level_main_file_output_path = os.path.join(output_level_dir, level_name) + os.extsep + 'level'
-    xray.utils.copy_file(level_main_file_path, level_main_file_output_path, missing_files)
-    for level_file in os.listdir(level_folder):
-        part_name, part_ext = os.path.splitext(level_file)
-        if part_ext == '.part':
-            part_src = os.path.join(level_folder, level_file)
-            part_out = os.path.join(os.path.join(output_level_dir, level_name), level_file)
-            xray.utils.copy_file(part_src, part_out, missing_files)
+
+    # collect objects and textures
     objects_list = set()
     textures = set()
 
@@ -114,9 +81,10 @@ def copy_resource():
     if not os.path.exists(out_objects_folder):
         os.makedirs(out_objects_folder)
 
+    # copy *.object and *.thm for objects
     for object_name in objects_list:
 
-        # OBJECT
+        # *.object
         object_path = os.path.join(objects_folder, object_name + os.extsep + 'object')
         if os.path.exists(object_path):
             out_object_path = os.path.join(out_objects_folder, object_name + os.extsep + 'object')
@@ -125,6 +93,8 @@ def copy_resource():
                 os.makedirs(object_dir)
             shutil.copyfile(object_path, out_object_path)
             object_type = xray.object_format.get_object_textures(object_path, textures)
+
+            # copy lod textures
             if object_type == 'MULIPLE_USAGE':
                 lod_tex_path = 'lod' + os.sep + 'lod_' + object_name.replace(os.sep, '_')
                 # source paths
@@ -147,7 +117,7 @@ def copy_resource():
         else:
             missing_files.add(object_path)
 
-        # THM
+        # *.thm
         thm_path = os.path.join(objects_folder, object_name + os.extsep + 'thm')
         if os.path.exists(thm_path):
             out_thm_path = os.path.join(out_objects_folder, object_name + os.extsep + 'thm')
@@ -158,7 +128,8 @@ def copy_resource():
         else:
             missing_files.add(thm_path)
 
-    copy_textures(
+    # copy textures *.dds, *.tga, *.thm
+    xray.utils.copy_textures(
         textures,
         missing_files,
         game_textures_folder,
@@ -167,9 +138,22 @@ def copy_resource():
         out_raw_tex_folder
     )
 
+    # copy *.level file
+    level_main_file_path = os.path.join(level_dir, level_name) + os.extsep + 'level'
+    level_main_file_output_path = os.path.join(output_level_dir, level_name) + os.extsep + 'level'
+    xray.utils.copy_file(level_main_file_path, level_main_file_output_path, missing_files)
+
+    # copy *.part files
+    for level_file in os.listdir(level_folder):
+        part_name, part_ext = os.path.splitext(level_file)
+        if part_ext == '.part':
+            part_src = os.path.join(level_folder, level_file)
+            part_out = os.path.join(os.path.join(output_level_dir, level_name), level_file)
+            xray.utils.copy_file(part_src, part_out, missing_files)
+
+    # report
     xray.utils.write_log(missing_files)
     xray.utils.save_settings(fs_path, out_folder)
-    status_label.configure(text='')
     xray.utils.report_total_time(status_label, start_time)
 
 
