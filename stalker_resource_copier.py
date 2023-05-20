@@ -15,51 +15,6 @@ GITHUB_REPO_URL = 'https://github.com/PavelBlend/stalker-resource-copier'
 FS_PATH_PROP = 'fs_path'
 OUT_FOLDER_PROP = 'out_folder'
 SETTINGS_FILE_NAME = 'stalker_resource_copier.ini'
-LOG_FILE_NAME = 'stalker_resource_copier.log'
-MISSIGNG_FILES = 'These files are not copied because they are missing:\n\n'
-ALL_COPIED = 'All files are copied.'
-
-
-def copy_file(src, output, missing_files):
-    if os.path.exists(src):
-        out_dir_name = os.path.dirname(output.lower())
-        if not os.path.exists(out_dir_name):
-            os.makedirs(out_dir_name)
-        shutil.copyfile(src, output.lower())
-    else:
-        missing_files.add(src)
-
-
-def read_object_data(data):
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0x0902:
-            packed_reader = xray.reader.PackedReader(chunk_data)
-            packed_reader.getf('<2I')    # file_version and unknown
-            reference = packed_reader.gets()
-            return reference
-
-
-def read_scene_objects(data, objects_list):
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0x3:    # TOOLS_CHUNK_OBJECTS
-            objects_chunked_reader = xray.reader.ChunkedReader(chunk_data)
-            for object_chunk_id, object_chunk_data in objects_chunked_reader:
-                object_chunked_reader = xray.reader.ChunkedReader(object_chunk_data)
-                for object_data_chunk_id, object_data_chunk_data in object_chunked_reader:
-                    if object_data_chunk_id == 0x7777:    # TOOLS_CHUNK_OBJECT_DATA
-                        reference = read_object_data(object_data_chunk_data)
-                        objects_list.add(reference)
-
-
-def read_level_objects(level_path, objects_list):
-    with open(level_path, 'rb') as file:
-        data = file.read()
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0x8002:    # SCENE_CHUNK_SCENE_OBJECTS
-            references = read_scene_objects(chunk_data, objects_list)
 
 
 def read_object_main(data, textures):
@@ -105,29 +60,6 @@ def get_object_textures(object_path, textures):
             else:
                 object_type = None
             return object_type
-
-
-def read_level_details(details_path, objects_list, textures):
-    with open(details_path, 'rb') as file:
-        data = file.read()
-    chunked_reader = xray.reader.ChunkedReader(data)
-    for chunk_id, chunk_data in chunked_reader:
-        if chunk_id == 0x800c:    # SCENE_CHUNK_DETAIL_OBJECTS
-            det_reader = xray.reader.ChunkedReader(chunk_data)
-            for det_obj_chunk_id, det_obj_chunk_data in det_reader:
-                if det_obj_chunk_id == 0x0001:    # DETMGR_CHUNK_OBJECTS
-                    det_objs_reader = xray.reader.ChunkedReader(det_obj_chunk_data)
-                    for det_obj_index, det_obj_data in det_objs_reader:
-                        det_obj_chunked_reader = xray.reader.ChunkedReader(det_obj_data)
-                        for det_chunk_id, det_chunk_data in det_obj_chunked_reader:
-                            if det_chunk_id == 0x0101:    # DETOBJ_CHUNK_REFERENCE
-                                det_packed_reader = xray.reader.PackedReader(det_chunk_data)
-                                reference_object = det_packed_reader.gets()
-                                objects_list.add(reference_object)
-                elif det_obj_chunk_id == 0x1002:    # DETMGR_CHUNK_TEXTURE
-                    det_tex_reader = xray.reader.PackedReader(det_obj_chunk_data)
-                    base_tex = det_tex_reader.gets()
-                    textures.add(base_tex)
 
 
 def read_glow_data(data, textures):
@@ -240,25 +172,7 @@ def copy_textures(
         ]
 
         for src, dist in texs:
-            copy_file(src, dist, missing_files)
-
-
-def write_log(missing_files):
-    missing_files = list(missing_files)
-    missing_files.sort()
-
-    log_lines = []
-    if len(missing_files):
-        log_lines.append(MISSIGNG_FILES)
-        for file in missing_files:
-            log_lines.append('{}\n'.format(file))
-
-    else:
-        log_lines.append(ALL_COPIED)
-
-    with open(LOG_FILE_NAME, 'w', encoding='utf-8') as log_file:
-        for log_line in log_lines:
-            log_file.write(log_line)
+            xray.utils.copy_file(src, dist, missing_files)
 
 
 def save_settings(fs_path, out_folder):
@@ -268,13 +182,6 @@ def save_settings(fs_path, out_folder):
 
     with open(SETTINGS_FILE_NAME, 'w', encoding='utf-8') as file:
         file.write(settings_text)
-
-
-def report_total_time(start_time):
-    end_time = time.time()
-    total_time = end_time - start_time
-    total_time_str = 'total time:    {} sec'.format(round(total_time, 2))
-    status_label.configure(text=total_time_str, bg=LABEL_COLOR)
 
 
 def copy_resource():
@@ -304,13 +211,13 @@ def copy_resource():
     level_folder = os.path.join(level_dir, level_name)
     level_main_file_path = os.path.join(level_dir, level_name) + os.extsep + 'level'
     level_main_file_output_path = os.path.join(output_level_dir, level_name) + os.extsep + 'level'
-    copy_file(level_main_file_path, level_main_file_output_path, missing_files)
+    xray.utils.copy_file(level_main_file_path, level_main_file_output_path, missing_files)
     for level_file in os.listdir(level_folder):
         part_name, part_ext = os.path.splitext(level_file)
         if part_ext == '.part':
             part_src = os.path.join(level_folder, level_file)
             part_out = os.path.join(os.path.join(output_level_dir, level_name), level_file)
-            copy_file(part_src, part_out, missing_files)
+            xray.utils.copy_file(part_src, part_out, missing_files)
     objects_list = set()
     textures = set()
     if os.path.exists(level_folder):
@@ -328,7 +235,7 @@ def copy_resource():
                 except:
                     # soc
                     level_path = os.path.join(level_folder, level_file)
-                    read_level_objects(level_path, objects_list)
+                    xray.scene_objects.read_scene_objects_part(level_path, objects_list)
             elif level_file == 'detail_object.part':
                 details_path = os.path.join(level_folder, level_file)
                 read_level_details(details_path, objects_list, textures)
@@ -391,7 +298,7 @@ def copy_resource():
                     [raw_thm_path, out_thm_path]
                 ]
                 for src, dist in texs:
-                    copy_file(src, dist, missing_files)
+                    xray.utils.copy_file(src, dist, missing_files)
         else:
             missing_files.add(object_path)
 
@@ -415,10 +322,10 @@ def copy_resource():
         out_raw_tex_folder
     )
 
-    write_log(missing_files)
+    xray.utils.write_log(missing_files)
     save_settings(fs_path, out_folder)
     status_label.configure(text='')
-    report_total_time(start_time)
+    xray.utils.report_total_time(status_label, start_time)
 
 
 def visit_repo_page(event):
@@ -470,7 +377,6 @@ WINDOW_HEIGHT = 240
 BACKGROUND_COLOR = '#808080'
 ACTIVE_BACKGROUND_COLOR = '#A0A0A0'
 BUTTON_COLOR = '#A0A0A0'
-LABEL_COLOR = '#707070'
 ERROR_COLOR = '#BC0000'
 ACTIVE_BUTTON_COLOR = '#B3B3B3'
 URL_COLOR = '#00007C'
@@ -513,16 +419,16 @@ copy_resource_button = tkinter.Button(
 open_fs_button = tkinter.Button(frame, text='open', command=open_fs, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
 set_output_button = tkinter.Button(frame, text='set', command=set_output, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
 # labels
-ver_label = tkinter.Label(frame, text='version:    {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=LABEL_COLOR)
+ver_label = tkinter.Label(frame, text='version:    {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
 date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
-date_label = tkinter.Label(frame, text=date_text, font=LABEL_FONT, bg=LABEL_COLOR)
-github_label = tkinter.Label(frame, text=GITHUB_REPO_URL, font=LABEL_FONT, bg=LABEL_COLOR, fg=URL_COLOR, cursor="hand2")
-status_text_label = tkinter.Label(frame, text='status:', font=LABEL_FONT, bg=LABEL_COLOR)
-status_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=LABEL_COLOR)
-fs_path_label = tkinter.Label(frame, text='fs.ltx:', font=LABEL_FONT, bg=LABEL_COLOR)
-output_path_label = tkinter.Label(frame, text='output:', font=LABEL_FONT, bg=LABEL_COLOR)
-mode_label = tkinter.Label(frame, text='mode:', font=LABEL_FONT, bg=LABEL_COLOR)
-level_name_label = tkinter.Label(frame, text='level:', font=LABEL_FONT, bg=LABEL_COLOR)
+date_label = tkinter.Label(frame, text=date_text, font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+github_label = tkinter.Label(frame, text=GITHUB_REPO_URL, font=LABEL_FONT, bg=xray.const.LABEL_COLOR, fg=URL_COLOR, cursor="hand2")
+status_text_label = tkinter.Label(frame, text='status:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+status_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+fs_path_label = tkinter.Label(frame, text='fs.ltx:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+output_path_label = tkinter.Label(frame, text='output:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+mode_label = tkinter.Label(frame, text='mode:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+level_name_label = tkinter.Label(frame, text='level:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
 
 # mode menu
 modes = ['source level', 'game level']
