@@ -3,6 +3,8 @@
 ## Описание
 `STALKER Resource Copier` - это скрипт, предназначенный для копирования текстур (`*.dds`, `*.tga`, `*.thm`) и 3D моделей (`*.object`) локации из `X-Ray SDK` в произвольную папку. Написан на `Python`. Для запуска нужно установить интерпретатор версии 3 ([python.org](http://www.python.org/)). 
 
+[![YouTube](http://github.com/PavelBlend/stalker-resource-copier/assets/7983249/b3e1f5b9-730b-4efa-b700-0606179ebe34)](http://youtu.be/zBAwqhdSHCw)
+
 ## Использование
 - Запустить скрипт `stalker_resource_copier.py`
 - Указать путь к `fs.ltx` файлу (он нужен для поиска дирректорий, в которых находятся текстуры и 3D модели)
