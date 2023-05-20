@@ -1,7 +1,7 @@
 import tkinter, time, os, shutil, webbrowser
 from tkinter import filedialog
 
-from xray import xray_ltx, xray_io
+import xray
 
 
 VERSION = (0, 0, 4)
@@ -24,22 +24,22 @@ def copy_file(src, output, missing_files):
 
 
 def read_object_data(data):
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == 0x0902:
-            packed_reader = xray_io.PackedReader(chunk_data)
+            packed_reader = xray.reader.PackedReader(chunk_data)
             packed_reader.getf('<2I')    # file_version and unknown
             reference = packed_reader.gets()
             return reference
 
 
 def read_scene_objects(data, objects_list):
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == 0x3:    # TOOLS_CHUNK_OBJECTS
-            objects_chunked_reader = xray_io.ChunkedReader(chunk_data)
+            objects_chunked_reader = xray.reader.ChunkedReader(chunk_data)
             for object_chunk_id, object_chunk_data in objects_chunked_reader:
-                object_chunked_reader = xray_io.ChunkedReader(object_chunk_data)
+                object_chunked_reader = xray.reader.ChunkedReader(object_chunk_data)
                 for object_data_chunk_id, object_data_chunk_data in object_chunked_reader:
                     if object_data_chunk_id == 0x7777:    # TOOLS_CHUNK_OBJECT_DATA
                         reference = read_object_data(object_data_chunk_data)
@@ -49,17 +49,17 @@ def read_scene_objects(data, objects_list):
 def read_level_objects(level_path, objects_list):
     with open(level_path, 'rb') as file:
         data = file.read()
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == 0x8002:    # SCENE_CHUNK_SCENE_OBJECTS
             references = read_scene_objects(chunk_data, objects_list)
 
 
 def read_object_main(data, textures):
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id in (0x0905, 0x0906, 0x0907):    # surfaces
-            reader = xray_io.PackedReader(chunk_data)
+            reader = xray.reader.PackedReader(chunk_data)
             surfaces_count = reader.getf('<I')[0]
             for surface_index in range(surfaces_count):
                 if chunk_id in (0x0906, 0x0907):
@@ -81,7 +81,7 @@ def read_object_main(data, textures):
                     vmap = reader.gets()
                 textures.add(texture)
         elif chunk_id == 0x0903:    # flags (object type)
-            reader = xray_io.PackedReader(chunk_data)
+            reader = xray.reader.PackedReader(chunk_data)
             flags = reader.getf('I')[0]
     return flags
 
@@ -89,7 +89,7 @@ def read_object_main(data, textures):
 def get_object_textures(object_path, textures):
     with open(object_path, 'rb') as file:
         data = file.read()
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == 0x7777:    # main
             flags = read_object_main(chunk_data, textures)
@@ -103,50 +103,50 @@ def get_object_textures(object_path, textures):
 def read_level_details(details_path, objects_list, textures):
     with open(details_path, 'rb') as file:
         data = file.read()
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == 0x800c:    # SCENE_CHUNK_DETAIL_OBJECTS
-            det_reader = xray_io.ChunkedReader(chunk_data)
+            det_reader = xray.reader.ChunkedReader(chunk_data)
             for det_obj_chunk_id, det_obj_chunk_data in det_reader:
                 if det_obj_chunk_id == 0x0001:    # DETMGR_CHUNK_OBJECTS
-                    det_objs_reader = xray_io.ChunkedReader(det_obj_chunk_data)
+                    det_objs_reader = xray.reader.ChunkedReader(det_obj_chunk_data)
                     for det_obj_index, det_obj_data in det_objs_reader:
-                        det_obj_chunked_reader = xray_io.ChunkedReader(det_obj_data)
+                        det_obj_chunked_reader = xray.reader.ChunkedReader(det_obj_data)
                         for det_chunk_id, det_chunk_data in det_obj_chunked_reader:
                             if det_chunk_id == 0x0101:    # DETOBJ_CHUNK_REFERENCE
-                                det_packed_reader = xray_io.PackedReader(det_chunk_data)
+                                det_packed_reader = xray.reader.PackedReader(det_chunk_data)
                                 reference_object = det_packed_reader.gets()
                                 objects_list.add(reference_object)
                 elif det_obj_chunk_id == 0x1002:    # DETMGR_CHUNK_TEXTURE
-                    det_tex_reader = xray_io.PackedReader(det_obj_chunk_data)
+                    det_tex_reader = xray.reader.PackedReader(det_obj_chunk_data)
                     base_tex = det_tex_reader.gets()
                     textures.add(base_tex)
 
 
 def read_glow_data(data, textures):
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == 0xc415:
-            packed_reader = xray_io.PackedReader(chunk_data)
+            packed_reader = xray.reader.PackedReader(chunk_data)
             texture = packed_reader.gets()
             textures.add(texture)
 
 
 def read_glow(data, textures):
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == 0x7777:
             read_glow_data(chunk_data, textures)
 
 
 def read_glows_objects(data, textures):
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for glow_index, glow_data in chunked_reader:
         read_glow(glow_data, textures)
 
 
 def read_glows(data, textures):
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == 0x3:
             read_glows_objects(chunk_data, textures)
@@ -155,14 +155,14 @@ def read_glows(data, textures):
 def read_level_glows(glows_path, textures):
     with open(glows_path, 'rb') as file:
         data = file.read()
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == 0x8001:
             read_glows(chunk_data, textures)
 
 
 def read_wallmark_object(data, textures):
-    packed_reader = xray_io.PackedReader(data)
+    packed_reader = xray.reader.PackedReader(data)
     item_count = packed_reader.getf('<I')[0]
     shader_name = packed_reader.gets()
     tex_name = packed_reader.gets()
@@ -180,13 +180,13 @@ def read_wallmark_object(data, textures):
 
 
 def read_wallmarks_objects(data, textures):
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         read_wallmark_object(chunk_data, textures)
 
 
 def read_wallmarks(data, textures):
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == 0x0005:
             read_wallmarks_objects(chunk_data, textures)
@@ -195,7 +195,7 @@ def read_wallmarks(data, textures):
 def read_level_wallmarks(wallmark_path, textures):
     with open(wallmark_path, 'rb') as file:
         data = file.read()
-    chunked_reader = xray_io.ChunkedReader(data)
+    chunked_reader = xray.reader.ChunkedReader(data)
     for chunk_id, chunk_data in chunked_reader:
         if chunk_id == 0x800e:
             read_wallmarks(chunk_data, textures)
@@ -208,7 +208,7 @@ def copy_resource():
     if not os.path.exists(fs_path):
         error_label.configure(text='ERROR: fs.ltx does not exist!')
         return
-    fs = xray_ltx.LtxParser()
+    fs = xray.ltx.LtxParser()
     fs.from_file(fs_path)
     fs_dir = os.path.dirname(fs_path)
     out_folder = output_path_ent.get()
@@ -242,7 +242,7 @@ def copy_resource():
             if level_file == 'scene_object.part':
                 try:
                     # cop
-                    objects = xray_ltx.LtxParser()
+                    objects = xray.ltx.LtxParser()
                     objects.from_file(os.path.join(level_folder, level_file))
                     for section in objects.sections.values():
                         if section.name.startswith('object_'):
@@ -259,7 +259,7 @@ def copy_resource():
             elif level_file == 'glow.part':
                 try:
                     # cop
-                    glows = xray_ltx.LtxParser()
+                    glows = xray.ltx.LtxParser()
                     glows.from_file(os.path.join(level_folder, level_file))
                     for section in glows.sections.values():
                         if section.name.startswith('object_'):
@@ -387,7 +387,7 @@ def add_levels_to_list(file_path):
     if file_path and os.path.exists(file_path):
         menu = level_list_menu['menu']
         menu.delete(0, "end")
-        fs = xray_ltx.LtxParser()
+        fs = xray.ltx.LtxParser()
         fs.from_file(file_path)
         fs_dir = os.path.dirname(file_path)
         maps_dir = os.path.join(fs_dir, fs.values['$maps$'])
@@ -501,7 +501,7 @@ github_label.bind('<Button-1>', visit_repo_page)
 # settings
 settings_file_name = 'stalker_resource_copier.ini'
 if os.path.exists(settings_file_name):
-    settings_parser = xray_ltx.LtxParser()
+    settings_parser = xray.ltx.LtxParser()
     settings_parser.from_file(settings_file_name)
     default_settings = settings_parser.sections.get('default_settings', None)
     if default_settings:
