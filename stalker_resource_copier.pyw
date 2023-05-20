@@ -12,6 +12,13 @@ VERSION = (0, 0, 4)
 DATE = (2021, 7, 26)
 GITHUB_REPO_URL = 'https://github.com/PavelBlend/stalker-resource-copier'
 
+FS_PATH_PROP = 'fs_path'
+OUT_FOLDER_PROP = 'out_folder'
+SETTINGS_FILE_NAME = 'stalker_resource_copier.ini'
+LOG_FILE_NAME = 'stalker_resource_copier.log'
+MISSIGNG_FILES = 'These files are not copied because they are missing:\n\n'
+ALL_COPIED = 'All files are copied.'
+
 
 def visit_repo_page(event):
     webbrowser.open(GITHUB_REPO_URL)
@@ -205,6 +212,75 @@ def read_level_wallmarks(wallmark_path, textures):
             read_wallmarks(chunk_data, textures)
 
 
+def copy_textures(
+        textures,
+        missing_files,
+        game_textures_folder,
+        raw_textures_folder,
+        out_game_tex_folder,
+        out_raw_tex_folder
+    ):
+
+    textures = list(textures)
+    textures.sort()
+
+    for texture in textures:
+        # source paths
+        game_tex_path = os.path.join(game_textures_folder, texture + os.extsep + 'dds')
+        game_thm_path = os.path.join(game_textures_folder, texture + os.extsep + 'thm')
+        raw_tex_path = os.path.join(raw_textures_folder, texture + os.extsep + 'tga')
+        raw_thm_path = os.path.join(raw_textures_folder, texture + os.extsep + 'thm')
+
+        # output paths
+        out_game_tex_path = os.path.join(out_game_tex_folder, texture + os.extsep + 'dds')
+        out_raw_tex_path = os.path.join(out_raw_tex_folder, texture + os.extsep + 'tga')
+        out_thm_path = os.path.join(out_game_tex_folder, texture + os.extsep + 'thm')
+
+        texs = [
+            [game_tex_path, out_game_tex_path],
+            [raw_tex_path, out_raw_tex_path],
+            [game_thm_path, out_thm_path],
+            [raw_thm_path, out_thm_path]
+        ]
+
+        for src, dist in texs:
+            copy_file(src, dist, missing_files)
+
+
+def write_log(missing_files):
+    missing_files = list(missing_files)
+    missing_files.sort()
+
+    log_lines = []
+    if len(missing_files):
+        log_lines.append(MISSIGNG_FILES)
+        for file in missing_files:
+            log_lines.append('{}\n'.format(file))
+
+    else:
+        log_lines.append(ALL_COPIED)
+
+    with open(LOG_FILE_NAME, 'w', encoding='utf-8') as log_file:
+        for log_line in log_lines:
+            log_file.write(log_line)
+
+
+def save_settings(fs_path, out_folder):
+    settings_text = '[default_settings]\n'
+    settings_text += '{0} = "{1}"\n'.format(FS_PATH_PROP, fs_path)
+    settings_text += '{0} = "{1}"\n'.format(OUT_FOLDER_PROP, out_folder)
+
+    with open(SETTINGS_FILE_NAME, 'w', encoding='utf-8') as file:
+        file.write(settings_text)
+
+
+def report_total_time(start_time):
+    end_time = time.time()
+    total_time = end_time - start_time
+    total_time_str = 'total time: {} sec'.format(round(total_time, 2))
+    timer_label.configure(text=total_time_str)
+
+
 def copy_resource():
     start_time = time.time()
     fs_path = fs_path_ent.get()
@@ -334,51 +410,19 @@ def copy_resource():
         else:
             missing_files.add(thm_path)
 
-    textures = list(textures)
-    textures.sort()
+    copy_textures(
+        textures,
+        missing_files,
+        game_textures_folder,
+        raw_textures_folder,
+        out_game_tex_folder,
+        out_raw_tex_folder
+    )
 
-    for texture in textures:
-        # source paths
-        game_tex_path = os.path.join(game_textures_folder, texture + os.extsep + 'dds')
-        raw_tex_path = os.path.join(raw_textures_folder, texture + os.extsep + 'tga')
-        game_thm_path = os.path.join(game_textures_folder, texture + os.extsep + 'thm')
-        raw_thm_path = os.path.join(raw_textures_folder, texture + os.extsep + 'thm')
-        # output paths
-        out_game_tex_path = os.path.join(out_game_tex_folder, texture + os.extsep + 'dds')
-        out_raw_tex_path = os.path.join(out_raw_tex_folder, texture + os.extsep + 'tga')
-        out_thm_path = os.path.join(out_game_tex_folder, texture + os.extsep + 'thm')
-        texs = [
-            [game_tex_path, out_game_tex_path],
-            [raw_tex_path, out_raw_tex_path],
-            [game_thm_path, out_thm_path],
-            [raw_thm_path, out_thm_path]
-        ]
-        for src, dist in texs:
-            copy_file(src, dist, missing_files)
-
-    missing_files = list(missing_files)
-    missing_files.sort()
-    log_lines = []
-    if len(missing_files):
-        log_lines.append('These files are not copied because they are missing:\n\n')
-        for file in missing_files:
-            log_lines.append('{}\n'.format(file))
-    else:
-        log_lines.append('All files are copied.')
-    with open('stalker_resource_copier.log', 'w', encoding='utf-8') as log_file:
-        for log_line in log_lines:
-            log_file.write(log_line)
-
-    settings_text = '[default_settings]\n'
-    settings_text += 'fs_path = "{}"\n'.format(fs_path)
-    settings_text += 'out_folder = "{}"\n'.format(out_folder)
-
-    with open(settings_file_name, 'w', encoding='utf-8') as file:
-        file.write(settings_text)
-
+    write_log(missing_files)
+    save_settings(fs_path, out_folder)
     error_label.configure(text='')
-    time_label_text = 'total time: {} sec'.format(round(time.time() - start_time, 2))
-    timer_label.configure(text=time_label_text)
+    report_total_time(start_time)
 
 
 def set_output():
@@ -505,15 +549,14 @@ cur_row += 1
 github_label.bind('<Button-1>', visit_repo_page)
 
 # settings
-settings_file_name = 'stalker_resource_copier.ini'
-if os.path.exists(settings_file_name):
+if os.path.exists(SETTINGS_FILE_NAME):
     settings_parser = xray.ltx.LtxParser()
-    settings_parser.from_file(settings_file_name)
+    settings_parser.from_file(SETTINGS_FILE_NAME)
     default_settings = settings_parser.sections.get('default_settings', None)
     if default_settings:
         fs_path_ent.delete(0, last=tkinter.END)
-        fs_path_ent.insert(0, default_settings.params['fs_path'])
-        add_levels_to_list(default_settings.params['fs_path'])
+        fs_path_ent.insert(0, default_settings.params[FS_PATH_PROP])
+        add_levels_to_list(default_settings.params[FS_PATH_PROP])
         output_path_ent.delete(0, last=tkinter.END)
-        output_path_ent.insert(0, default_settings.params['out_folder'])
+        output_path_ent.insert(0, default_settings.params[OUT_FOLDER_PROP])
 root.mainloop()
