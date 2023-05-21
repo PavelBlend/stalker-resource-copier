@@ -1,37 +1,28 @@
-from zipfile import ZipFile, ZIP_DEFLATED
-from os import path, walk
+import os
+import zipfile
 
 
 version = (0, 0, 4)
-with ZipFile('stalker-resource-copier-' + ('.'.join(map(str, version))) + '.zip', 'w') as z:
+file_name = 'stalker-resource-copier-' + ('.'.join(map(str, version))) + '.zip'
+
+with zipfile.ZipFile(file_name, 'w') as z:
     z.write(
-        'stalker_resource_copier.pyw',
+        'stalker_resource_copier.py',
         'stalker_resource_copier/stalker_resource_copier.pyw',
-        compress_type=ZIP_DEFLATED
+        compress_type=zipfile.ZIP_DEFLATED
     )
     z.write(
         'README.md',
         'stalker_resource_copier/README.md',
-        compress_type=ZIP_DEFLATED
+        compress_type=zipfile.ZIP_DEFLATED
     )
-    z.write(
-        'xray\\__init__.py',
-        'stalker_resource_copier/xray/__init__.py',
-        compress_type=ZIP_DEFLATED
-    )
-    z.write(
-        'xray\\lzhuf.py',
-        'stalker_resource_copier/xray/lzhuf.py',
-        compress_type=ZIP_DEFLATED
-    )
-    z.write(
-        'xray\\xray_io.py',
-        'stalker_resource_copier/xray/xray_io.py',
-        compress_type=ZIP_DEFLATED
-    )
-    z.write(
-        'xray\\xray_ltx.py',
-        'stalker_resource_copier/xray/xray_ltx.py',
-        compress_type=ZIP_DEFLATED
-    )
+    for file in os.listdir('xray'):
+        name, ext = os.path.splitext(file)
+        if ext == '.py':
+            z.write(
+                'xray\\{}.py'.format(name),
+                'stalker_resource_copier/xray/{}.py'.format(name),
+                compress_type=zipfile.ZIP_DEFLATED
+            )
+
 input('Finish!')
