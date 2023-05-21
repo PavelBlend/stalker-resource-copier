@@ -10,7 +10,6 @@ import xray
 
 VERSION = (0, 0, 4)
 DATE = (2021, 7, 26)
-GITHUB_REPO_URL = 'https://github.com/PavelBlend/stalker-resource-copier'
 
 
 def copy_resource():
@@ -315,7 +314,7 @@ set_output_button = tkinter.Button(frame, text='set', command=set_output, bg=BUT
 ver_label = tkinter.Label(frame, text='version:    {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
 date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
 date_label = tkinter.Label(frame, text=date_text, font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-github_label = tkinter.Label(frame, text=GITHUB_REPO_URL, font=LABEL_FONT, bg=xray.const.LABEL_COLOR, fg=URL_COLOR, cursor="hand2")
+github_label = tkinter.Label(frame, text=xray.const.GITHUB_REPO_URL, font=LABEL_FONT, bg=xray.const.LABEL_COLOR, fg=URL_COLOR, cursor="hand2")
 status_text_label = tkinter.Label(frame, text='status:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
 status_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
 fs_path_label = tkinter.Label(frame, text='fs.ltx:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)

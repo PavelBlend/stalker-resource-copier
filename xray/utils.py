@@ -64,7 +64,7 @@ def report_total_time(status_label, start_time):
 
 
 def visit_repo_page(event):
-    webbrowser.open(GITHUB_REPO_URL)
+    webbrowser.open(const.GITHUB_REPO_URL)
 
 
 def copy_files(
