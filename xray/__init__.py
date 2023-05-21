@@ -9,3 +9,4 @@ from . import scene_glows
 from . import scene_wallmarks
 from . import game_level
 from . import scene_sound_source
+from . import scene_groups

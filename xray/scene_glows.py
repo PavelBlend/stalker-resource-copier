@@ -1,3 +1,4 @@
+from . import ltx
 from . import utils
 from . import reader
 
@@ -51,7 +52,7 @@ def read_soc_glows(path, textures):
 
 
 def read_cop_glows(path, textures):
-    glows = xray.ltx.LtxParser()
+    glows = ltx.LtxParser()
     glows.from_file(path)
 
     for section in glows.sections.values():

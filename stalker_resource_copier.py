@@ -49,6 +49,8 @@ def copy_resource():
         output_level_dir = os.path.join(out_folder, fs.values['$maps$'])
         level_name = level_name_var.get()
 
+        groups_dir = os.path.join(fs_dir, fs.values['$groups$'])
+
         if level_name == NONE_LEVEL:
             status_label.configure(text='ERROR: Level not selected!', bg=ERROR_COLOR)
             return
@@ -73,6 +75,9 @@ def copy_resource():
 
                 elif level_file == 'sound_src.part':
                     xray.scene_sound_source.read_sound_sources(file_path, sounds)
+
+                elif level_file == 'group.part':
+                    xray.scene_groups.read_level_groups(file_path, objects_list, groups_dir)
 
     else:
         # game level
