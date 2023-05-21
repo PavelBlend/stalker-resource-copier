@@ -1,9 +1,9 @@
 import os
 import zipfile
+import stalker_resource_copier
 
 
-version = (0, 0, 4)
-file_name = 'stalker-resource-copier-' + ('.'.join(map(str, version))) + '.zip'
+file_name = 'stalker-resource-copier-' + ('.'.join(map(str, stalker_resource_copier.VERSION))) + '.zip'
 
 with zipfile.ZipFile(file_name, 'w') as z:
     z.write(

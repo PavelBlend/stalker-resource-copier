@@ -9,7 +9,7 @@ import xray
 
 
 VERSION = (0, 0, 4)
-DATE = (2021, 7, 26)
+DATE = (2023, 5, 21)
 
 
 def copy_resource():
