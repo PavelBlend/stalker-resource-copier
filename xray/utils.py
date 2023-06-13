@@ -4,6 +4,7 @@ import time
 import webbrowser
 
 from . import const
+from . import ltx
 
 
 LOG_FILE_NAME = 'stalker_resource_copier.log'
@@ -79,6 +80,32 @@ def copy_files(
     ):
 
     files = list(files)
+
+    bumps = {}
+
+    if game_ext == 'dds':
+        tex_ltx_path = os.path.join(game_folder, 'textures.ltx')
+
+        if os.path.exists(tex_ltx_path):
+            tex_ltx = ltx.LtxParser()
+            tex_ltx.from_file(tex_ltx_path)
+            bumps_sect = tex_ltx.sections['specification']
+
+            for tex_name, tex_param in bumps_sect.params.items():
+                if 'bump_mode[use:' in tex_param:
+                    bump = tex_param.split('bump_mode[use:')[1].split(']')[0]
+                    if bump:
+                        bumps[tex_name] = bump
+
+    if bumps:
+
+        for file in files:
+            bump_file = bumps.get(file, None)
+
+            if bump_file:
+                files.append(bump_file)
+                files.append(bump_file + '#')
+
     files.sort()
 
     for file in files:
