@@ -8,7 +8,7 @@ import tkinter.filedialog
 import xray
 
 
-VERSION = (1, 1, 0)
+VERSION = (1, 2, 0)
 DATE = (2023, 5, 21)
 
 
