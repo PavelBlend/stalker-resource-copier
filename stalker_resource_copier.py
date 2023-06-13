@@ -19,9 +19,13 @@ def copy_resource():
 
     fs_path = fs_path_ent.get()
     fs_path = fs_path.replace('/', os.sep)
+    fs_path = fs_path.replace('\\', os.sep)
 
     if not os.path.exists(fs_path):
-        status_label.configure(text='ERROR: fs.ltx does not exist!', bg=ERROR_COLOR)
+        status_label.configure(
+            text='ERROR: fs.ltx does not exist!',
+            bg=ERROR_COLOR
+        )
         return
 
     fs = xray.ltx.LtxParser()
@@ -30,42 +34,51 @@ def copy_resource():
 
     out_folder = output_path_ent.get()
     out_folder = out_folder.replace('/', os.sep)
+    out_folder = out_folder.replace('\\', os.sep)
 
     if not os.path.exists(out_folder):
         os.makedirs(out_folder)
 
     if os.listdir(out_folder):
-        status_label.configure(text='ERROR: Output folder is not empty!', bg=ERROR_COLOR)
+        status_label.configure(
+            text='ERROR: Output folder is not empty!',
+            bg=ERROR_COLOR
+        )
         return
 
     # collect objects and textures
-    objects_list = set()
+    objects = set()
     textures = set()
     sounds = set()
     missing_files = set()
 
     if mode == 'source level':
-        level_dir = os.path.join(fs_dir, fs.values['$maps$'])
+        maps_dir = os.path.join(fs_dir, fs.values['$maps$'])
         output_level_dir = os.path.join(out_folder, fs.values['$maps$'])
         level_name = level_name_var.get()
+        level_name = level_name.replace('/', os.sep)
+        level_name = level_name.replace('\\', os.sep)
 
         groups_dir = os.path.join(fs_dir, fs.values['$groups$'])
 
         if level_name == NONE_LEVEL:
-            status_label.configure(text='ERROR: Level not selected!', bg=ERROR_COLOR)
+            status_label.configure(
+                text='ERROR: Level not selected!',
+                bg=ERROR_COLOR
+            )
             return
 
-        level_folder = os.path.join(level_dir, level_name)
+        level_folder = os.path.join(maps_dir, level_name)
 
         if os.path.exists(level_folder):
             for level_file in os.listdir(level_folder):
                 file_path = os.path.join(level_folder, level_file)
 
                 if level_file == 'scene_object.part':
-                    xray.scene_objects.read_scene_objects_part(file_path, objects_list)
+                    xray.scene_objects.read_scene_objects_part(file_path, objects)
 
                 elif level_file == 'detail_object.part':
-                    xray.scene_details.read_level_details(file_path, objects_list, textures)
+                    xray.scene_details.read_level_details(file_path, objects, textures)
 
                 elif level_file == 'glow.part':
                     xray.scene_glows.read_level_glows(file_path, textures)
@@ -77,14 +90,26 @@ def copy_resource():
                     xray.scene_sound_source.read_sound_sources(file_path, sounds)
 
                 elif level_file == 'group.part':
-                    xray.scene_groups.read_level_groups(file_path, objects_list, groups_dir)
+                    xray.scene_groups.read_level_groups(file_path, objects, groups_dir)
+
+        else:
+            status_label.configure(
+                text='ERROR: level folder not found: "{}"'.format(level_name),
+                bg=ERROR_COLOR
+            )
+            return
 
     else:
         # game level
         file_path = game_level_file.get()
+        file_path = file_path.replace('/', os.sep)
+        file_path = file_path.replace('\\', os.sep)
 
         if not file_path:
-            status_label.configure(text='ERROR: Level file not specified!', bg=ERROR_COLOR)
+            status_label.configure(
+                text='ERROR: Level file not specified!',
+                bg=ERROR_COLOR
+            )
             return
 
         if os.path.exists(file_path):
@@ -92,29 +117,37 @@ def copy_resource():
             if os.path.isfile(file_path):
                 xray.game_level.read_game_level_textures(file_path, textures)
             else:
-                status_label.configure(text='ERROR: Level file not exists!', bg=ERROR_COLOR)
+                status_label.configure(
+                    text='ERROR: Level file not exists!',
+                    bg=ERROR_COLOR
+                )
                 return
 
         else:
-            status_label.configure(text='ERROR: Level file not exists!', bg=ERROR_COLOR)
+            status_label.configure(
+                text='ERROR: Level file not exists!',
+                bg=ERROR_COLOR
+            )
             return
 
-    objects_list = list(objects_list)
-    objects_list.sort()
+    objects = list(objects)
+    objects.sort()
+
     objects_folder = os.path.join(fs_dir, fs.values['$objects$'])
     out_objects_folder = os.path.join(out_folder, fs.values['$objects$'])
 
-    game_textures_folder = os.path.join(fs_dir, fs.values['$game_textures$'])
-    raw_textures_folder = os.path.join(fs_dir, fs.values['$textures$'])
+    game_tex_folder = os.path.join(fs_dir, fs.values['$game_textures$'])
     out_game_tex_folder = os.path.join(out_folder, fs.values['$game_textures$'])
+
+    raw_tex_folder = os.path.join(fs_dir, fs.values['$textures$'])
     out_raw_tex_folder = os.path.join(out_folder, fs.values['$textures$'])
 
-    if objects_list:
+    if objects:
         if not os.path.exists(out_objects_folder):
             os.makedirs(out_objects_folder)
 
         # copy *.object and *.thm for objects
-        for object_name in objects_list:
+        for object_name in objects:
 
             # *.object
             object_path = os.path.join(objects_folder, object_name + os.extsep + 'object')
@@ -130,10 +163,10 @@ def copy_resource():
                 if object_type == 'MULIPLE_USAGE':
                     lod_tex_path = 'lod' + os.sep + 'lod_' + object_name.replace(os.sep, '_')
                     # source paths
-                    game_tex_path = os.path.join(game_textures_folder, lod_tex_path + os.extsep + 'dds')
-                    raw_tex_path = os.path.join(raw_textures_folder, lod_tex_path + os.extsep + 'tga')
-                    game_thm_path = os.path.join(game_textures_folder, lod_tex_path + os.extsep + 'thm')
-                    raw_thm_path = os.path.join(raw_textures_folder, lod_tex_path + os.extsep + 'thm')
+                    game_tex_path = os.path.join(game_tex_folder, lod_tex_path + os.extsep + 'dds')
+                    raw_tex_path = os.path.join(raw_tex_folder, lod_tex_path + os.extsep + 'tga')
+                    game_thm_path = os.path.join(game_tex_folder, lod_tex_path + os.extsep + 'thm')
+                    raw_thm_path = os.path.join(raw_tex_folder, lod_tex_path + os.extsep + 'thm')
                     # output paths
                     out_game_tex_path = os.path.join(out_game_tex_folder, lod_tex_path + os.extsep + 'dds')
                     out_raw_tex_path = os.path.join(out_raw_tex_folder, lod_tex_path + os.extsep + 'tga')
@@ -164,8 +197,8 @@ def copy_resource():
     xray.utils.copy_files(
         textures,
         missing_files,
-        game_textures_folder,
-        raw_textures_folder,
+        game_tex_folder,
+        raw_tex_folder,
         out_game_tex_folder,
         out_raw_tex_folder,
         'dds',
@@ -174,8 +207,9 @@ def copy_resource():
 
     # copy sounds *.ogg, *.wav, *.thm
     game_sounds_folder = os.path.join(fs_dir, fs.values['$game_sounds$'])
-    raw_sounds_folder = os.path.join(fs_dir, fs.values['$sounds$'])
     out_game_sounds_folder = os.path.join(out_folder, fs.values['$game_sounds$'])
+
+    raw_sounds_folder = os.path.join(fs_dir, fs.values['$sounds$'])
     out_raw_sounds_folder = os.path.join(out_folder, fs.values['$sounds$'])
 
     xray.utils.copy_files(
@@ -191,7 +225,7 @@ def copy_resource():
 
     if mode == 'source level':
         # copy *.level file
-        level_main_file_path = os.path.join(level_dir, level_name) + os.extsep + 'level'
+        level_main_file_path = os.path.join(maps_dir, level_name) + os.extsep + 'level'
         level_main_file_output_path = os.path.join(output_level_dir, level_name) + os.extsep + 'level'
         xray.utils.copy_file(level_main_file_path, level_main_file_output_path, missing_files)
 
