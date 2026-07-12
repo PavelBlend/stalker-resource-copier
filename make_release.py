@@ -10,7 +10,8 @@ py_ext = '.py'
 pyw_ext = '.pyw'
 source_name = prog_name.replace(' ', '_')
 release_name = prog_name.replace(' ', '-')
-file_name = release_name + '-' + ('.'.join(map(str, stalker_resource_copier.VERSION))) + '.zip'
+ver_str = ('.'.join(map(str, stalker_resource_copier.VERSION)))
+file_name = '{0}-{1}.zip'.format(release_name, ver_str)
 
 # write .zip file
 with zipfile.ZipFile(file_name, 'w') as z:
