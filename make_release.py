@@ -4,8 +4,8 @@ import stalker_resource_copier
 
 
 prog_name = 'stalker resource copier'
-zip_name = prog_name.replace(' ', '-')
-file_name = zip_name + '-' + ('.'.join(map(str, stalker_resource_copier.VERSION))) + '.zip'
+release_name = prog_name.replace(' ', '-')
+file_name = release_name + '-' + ('.'.join(map(str, stalker_resource_copier.VERSION))) + '.zip'
 
 with zipfile.ZipFile(file_name, 'w') as z:
     z.write(
