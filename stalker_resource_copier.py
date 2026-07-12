@@ -12,254 +12,7 @@ VERSION = (1, 2, 0)
 DATE = (2023, 5, 21)
 
 
-class CopyResource:
-
-    def copy_resource(self):
-        start_time = time.time()
-
-        fs_path = fs_path_ent.get()
-        fs_path = fs_path.replace('/', os.sep)
-        fs_path = fs_path.replace('\\', os.sep)
-
-        if not os.path.exists(fs_path):
-            status_label.configure(
-                text='ERROR: fs.ltx does not exist!',
-                bg=ERROR_COLOR
-            )
-            return
-
-        fs = xray.ltx.LtxParser()
-        fs.from_file(fs_path)
-        fs_dir = os.path.dirname(fs_path)
-
-        out_folder = output_path_ent.get()
-        out_folder = out_folder.replace('/', os.sep)
-        out_folder = out_folder.replace('\\', os.sep)
-
-        if not os.path.exists(out_folder):
-            os.makedirs(out_folder)
-
-        if os.listdir(out_folder):
-            status_label.configure(
-                text='ERROR: Output folder is not empty!',
-                bg=ERROR_COLOR
-            )
-            return
-
-        # collect objects and textures
-        objects = set()
-        textures = set()
-        sounds = set()
-        missing_files = set()
-
-        # get level path
-        level_path = level_file.get()
-        level_path = level_path.replace('/', os.sep)
-        level_path = level_path.replace('\\', os.sep)
-
-        if not level_path:
-            status_label.configure(
-                text='ERROR: Level file not specified!',
-                bg=ERROR_COLOR
-            )
-            return
-
-        if os.path.exists(level_path):
-
-            if not os.path.isfile(level_path):
-                status_label.configure(
-                    text='ERROR: Level file not exists!',
-                    bg=ERROR_COLOR
-                )
-                return
-
-        else:
-            status_label.configure(
-                text='ERROR: Level file not exists!',
-                bg=ERROR_COLOR
-            )
-            return
-
-        maps_dir = os.path.join(fs_dir, fs.values['$maps$'])
-        output_level_dir = os.path.join(out_folder, fs.values['$maps$'])
-
-        # rawdata\maps
-        if level_path.startswith(maps_dir):
-
-            groups_dir = os.path.join(fs_dir, fs.values['$groups$'])
-
-            level_folder = os.path.splitext(level_path)[0]
-
-            if os.path.exists(level_folder):
-
-                for file_name in os.listdir(level_folder):
-                    file_path = os.path.join(level_folder, file_name)
-
-                    if file_name == 'scene_object.part':
-                        xray.scene_objects.read_scene_objects_part(file_path, objects)
-
-                    elif file_name == 'detail_object.part':
-                        xray.scene_details.read_level_details(file_path, objects, textures)
-
-                    elif file_name == 'glow.part':
-                        xray.scene_glows.read_level_glows(file_path, textures)
-
-                    elif file_name == 'wallmark.part':
-                        xray.scene_wallmarks.read_level_wallmarks(file_path, textures)
-
-                    elif file_name == 'sound_src.part':
-                        xray.scene_sound_source.read_sound_sources(file_path, sounds)
-
-                    elif file_name == 'group.part':
-                        xray.scene_groups.read_level_groups(file_path, objects, groups_dir)
-
-            else:
-                status_label.configure(
-                    text='ERROR: level folder not found: "{}"'.format(level_folder),
-                    bg=ERROR_COLOR
-                )
-                return
-
-        # gamedata\levels
-        else:
-            xray.game_level.read_game_level_textures(level_path, textures)
-
-        objects = list(objects)
-        objects.sort()
-
-        objects_folder = os.path.join(fs_dir, fs.values['$objects$'])
-        out_objects_folder = os.path.join(out_folder, fs.values['$objects$'])
-
-        game_tex_folder = os.path.join(fs_dir, fs.values['$game_textures$'])
-        out_game_tex_folder = os.path.join(out_folder, fs.values['$game_textures$'])
-
-        raw_tex_folder = os.path.join(fs_dir, fs.values['$textures$'])
-        out_raw_tex_folder = os.path.join(out_folder, fs.values['$textures$'])
-
-        if objects:
-            if not os.path.exists(out_objects_folder):
-                os.makedirs(out_objects_folder)
-
-            # copy *.object and *.thm for objects
-            for object_name in objects:
-
-                # *.object
-                object_path = os.path.join(objects_folder, object_name + os.extsep + 'object')
-                if os.path.exists(object_path):
-                    out_object_path = os.path.join(out_objects_folder, object_name + os.extsep + 'object')
-                    object_dir = os.path.dirname(out_object_path)
-                    if not os.path.exists(object_dir):
-                        os.makedirs(object_dir)
-                    shutil.copyfile(object_path, out_object_path)
-                    object_type = xray.object_format.get_object_textures(object_path, textures)
-
-                    # copy lod textures
-                    if object_type == 'MULIPLE_USAGE':
-                        lod_tex_path = 'lod' + os.sep + 'lod_' + object_name.replace(os.sep, '_')
-                        # source paths
-                        game_tex_path = os.path.join(game_tex_folder, lod_tex_path + os.extsep + 'dds')
-                        raw_tex_path = os.path.join(raw_tex_folder, lod_tex_path + os.extsep + 'tga')
-                        game_thm_path = os.path.join(game_tex_folder, lod_tex_path + os.extsep + 'thm')
-                        raw_thm_path = os.path.join(raw_tex_folder, lod_tex_path + os.extsep + 'thm')
-                        # output paths
-                        out_game_tex_path = os.path.join(out_game_tex_folder, lod_tex_path + os.extsep + 'dds')
-                        out_raw_tex_path = os.path.join(out_raw_tex_folder, lod_tex_path + os.extsep + 'tga')
-                        out_thm_path = os.path.join(out_game_tex_folder, lod_tex_path + os.extsep + 'thm')
-                        texs = [
-                            [game_tex_path, out_game_tex_path],
-                            [raw_tex_path, out_raw_tex_path],
-                            [game_thm_path, out_thm_path],
-                            [raw_thm_path, out_thm_path]
-                        ]
-                        for src, dist in texs:
-                            xray.utils.copy_file(src, dist, missing_files)
-                else:
-                    missing_files.add(object_path)
-
-                # *.thm
-                thm_path = os.path.join(objects_folder, object_name + os.extsep + 'thm')
-                if os.path.exists(thm_path):
-                    out_thm_path = os.path.join(out_objects_folder, object_name + os.extsep + 'thm')
-                    thm_dir = os.path.dirname(out_thm_path)
-                    if not os.path.exists(thm_dir):
-                        os.makedirs(thm_dir)
-                    shutil.copyfile(thm_path, out_thm_path)
-                else:
-                    missing_files.add(thm_path)
-
-        # copy textures *.dds, *.tga, *.thm
-        xray.utils.copy_files(
-            textures,
-            missing_files,
-            game_tex_folder,
-            raw_tex_folder,
-            out_game_tex_folder,
-            out_raw_tex_folder,
-            'dds',
-            'tga'
-        )
-
-        # copy sounds *.ogg, *.wav, *.thm
-        game_sounds_folder = os.path.join(fs_dir, fs.values['$game_sounds$'])
-        out_game_sounds_folder = os.path.join(out_folder, fs.values['$game_sounds$'])
-
-        raw_sounds_folder = os.path.join(fs_dir, fs.values['$sounds$'])
-        out_raw_sounds_folder = os.path.join(out_folder, fs.values['$sounds$'])
-
-        xray.utils.copy_files(
-            sounds,
-            missing_files,
-            game_sounds_folder,
-            raw_sounds_folder,
-            out_game_sounds_folder,
-            out_raw_sounds_folder,
-            'ogg',
-            'wav'
-        )
-
-        if level_path.startswith(maps_dir):
-            level_rel_path = os.path.splitext(level_path)[0][len(maps_dir) : ]
-    
-            # copy *.level file
-            level_main_file_output_path = os.path.join(output_level_dir, level_rel_path, '.level')
-            xray.utils.copy_file(level_path, level_main_file_output_path, missing_files)
-
-            # copy *.part files
-            for file_name in os.listdir(level_folder):
-                part_name, part_ext = os.path.splitext(file_name)
-                if part_ext == '.part':
-                    part_src = os.path.join(level_folder, file_name)
-                    part_out = os.path.join(os.path.join(output_level_dir, level_rel_path), file_name)
-                    xray.utils.copy_file(part_src, part_out, missing_files)
-
-        # report
-        xray.utils.write_log(missing_files)
-        xray.utils.save_settings(fs_path, out_folder)
-        xray.utils.report_total_time(status_label, start_time)
-
-
-def _set_entry_value(entry, dialog_fun):
-    path = dialog_fun()
-    if path:
-        path = path.replace('\\', os.sep)
-        path = path.replace('/', os.sep)
-        entry.delete(0, last=tkinter.END)
-        entry.insert(0, path)
-
-
-def set_output():
-    _set_entry_value(output_path_ent, tkinter.filedialog.askdirectory)
-
-
-def open_fs():
-    _set_entry_value(fs_path_ent, tkinter.filedialog.askopenfilename)
-
-
-def open_game_level():
-    _set_entry_value(level_file, tkinter.filedialog.askopenfilename)
-
-
-class GUI:
+class ReourceCopier:
 
     def __init__(self):
         self.init_params()
@@ -413,8 +166,7 @@ class GUI:
         )
 
     def create_buttons(self):
-        copy_res = CopyResource()
-
+        # copy resource button
         self.copy_resource_button = tkinter.Button(
             self.frame,
             text=self.COPY_RES_TEXT,
@@ -423,28 +175,34 @@ class GUI:
             bg=self.BUTTON_COLOR,
             activebackground=self.ACTIVE_BUTTON_COLOR,
             font=self.ENTRY_FONT,
-            command=copy_res.copy_resource
+            command=self.copy_resource
         )
+
+        # open fs.ltx button
         self.open_fs_button = tkinter.Button(
             self.frame,
             text='set',
-            command=open_fs,
+            command=self.open_fs,
             bg=self.BUTTON_COLOR,
             font=self.ENTRY_FONT,
             width=5
         )
+
+        # set output button
         self.set_output_button = tkinter.Button(
             self.frame,
             text='set',
-            command=set_output,
+            command=self.set_output,
             bg=self.BUTTON_COLOR,
             font=self.ENTRY_FONT,
             width=5
         )
+
+        # set level button
         self.open_level_button = tkinter.Button(
             self.frame,
             text='set',
-            command=open_game_level,
+            command=self.open_game_level,
             bg=self.BUTTON_COLOR,
             font=self.ENTRY_FONT,
             width=5
@@ -616,24 +374,277 @@ class GUI:
         if os.path.exists(xray.const.SETTINGS_FILE_NAME):
             settings_parser = xray.ltx.LtxParser()
             settings_parser.from_file(xray.const.SETTINGS_FILE_NAME)
-            default_settings = settings_parser.sections.get('default_settings', None)
+            def_stngs = settings_parser.sections.get('default_settings', None)
 
-            if default_settings:
+            if def_stngs:
 
                 # set fs.ltx path
-                fs_path = default_settings.params[xray.const.FS_PATH_PROP]
+                fs_path = def_stngs.params[xray.const.FS_PATH_PROP]
                 fs_path = fs_path.replace('\\', os.sep)
                 fs_path = fs_path.replace('/', os.sep)
                 self.fs_path_ent.delete(0, last=tkinter.END)
                 self.fs_path_ent.insert(0, fs_path)
 
                 # set output path
-                out_path = default_settings.params[xray.const.OUT_FOLDER_PROP]
+                out_path = def_stngs.params[xray.const.OUT_FOLDER_PROP]
                 out_path = out_path.replace('\\', os.sep)
                 out_path = out_path.replace('/', os.sep)
                 self.output_path_ent.delete(0, last=tkinter.END)
                 self.output_path_ent.insert(0, out_path)
 
+    def _set_entry_value(self, entry, dialog_fun):
+        path = dialog_fun()
+        if path:
+            path = path.replace('\\', os.sep)
+            path = path.replace('/', os.sep)
+            entry.delete(0, last=tkinter.END)
+            entry.insert(0, path)
+
+    def set_output(self):
+        self._set_entry_value(
+            self.output_path_ent,
+            tkinter.filedialog.askdirectory
+        )
+
+    def open_fs(self):
+        self._set_entry_value(
+            self.fs_path_ent,
+            tkinter.filedialog.askopenfilename
+        )
+
+    def open_game_level(self):
+        self._set_entry_value(
+            self.level_file,
+            tkinter.filedialog.askopenfilename
+        )
+
+    ###########################################################################
+    def copy_resource(self):
+        self.start_time = time.time()
+
+        self.read_fs_ltx()
+
+    def read_fs_ltx(self):
+        self.fs_path = self.fs_path_ent.get()
+        self.fs_path = self.fs_path.replace('/', os.sep)
+        self.fs_path = self.fs_path.replace('\\', os.sep)
+
+        if not os.path.exists(self.fs_path):
+            self.status_label.configure(
+                text='ERROR: fs.ltx does not exist!',
+                bg=self.ERROR_COLOR
+            )
+            return
+
+        self.fs = xray.ltx.LtxParser()
+        self.fs.from_file(self.fs_path)
+        self.fs_dir = os.path.dirname(self.fs_path)
+
+        self.out_folder = self.output_path_ent.get()
+        self.out_folder = self.out_folder.replace('/', os.sep)
+        self.out_folder = self.out_folder.replace('\\', os.sep)
+
+        if not os.path.exists(self.out_folder):
+            os.makedirs(self.out_folder)
+
+        if os.listdir(self.out_folder):
+            self.status_label.configure(
+                text='ERROR: Output folder is not empty!',
+                bg=self.ERROR_COLOR
+            )
+            return
+
+        # collect objects and textures
+        self.objects = set()
+        self.textures = set()
+        self.sounds = set()
+        self.missing_files = set()
+
+        # get level path
+        self.level_path = self.level_file.get()
+        self.level_path = self.level_path.replace('/', os.sep)
+        self.level_path = self.level_path.replace('\\', os.sep)
+
+        if not self.level_path:
+            self.status_label.configure(
+                text='ERROR: Level file not specified!',
+                bg=self.ERROR_COLOR
+            )
+            return
+
+        if os.path.exists(self.level_path):
+
+            if not os.path.isfile(self.level_path):
+                self.status_label.configure(
+                    text='ERROR: Level file not exists!',
+                    bg=self.ERROR_COLOR
+                )
+                return
+
+        else:
+            self.status_label.configure(
+                text='ERROR: Level file not exists!',
+                bg=self.ERROR_COLOR
+            )
+            return
+
+        self.maps_dir = os.path.join(self.fs_dir, self.fs.values['$maps$'])
+        output_level_dir = os.path.join(self.out_folder, self.fs.values['$maps$'])
+
+        # rawdata\maps
+        if self.level_path.startswith(self.maps_dir):
+
+            self.groups_dir = os.path.join(self.fs_dir, self.fs.values['$groups$'])
+
+            self.level_folder = os.path.splitext(self.level_path)[0]
+
+            if os.path.exists(self.level_folder):
+
+                for file_name in os.listdir(self.level_folder):
+                    file_path = os.path.join(self.level_folder, file_name)
+
+                    if file_name == 'scene_object.part':
+                        xray.scene_objects.read_scene_objects_part(file_path, self.objects)
+
+                    elif file_name == 'detail_object.part':
+                        xray.scene_details.read_level_details(file_path, self.objects, self.textures)
+
+                    elif file_name == 'glow.part':
+                        xray.scene_glows.read_level_glows(file_path, self.textures)
+
+                    elif file_name == 'wallmark.part':
+                        xray.scene_wallmarks.read_level_wallmarks(file_path, self.textures)
+
+                    elif file_name == 'sound_src.part':
+                        xray.scene_sound_source.read_sound_sources(file_path, self.sounds)
+
+                    elif file_name == 'group.part':
+                        xray.scene_groups.read_level_groups(file_path, self.objects, self.groups_dir)
+
+            else:
+                self.status_label.configure(
+                    text='ERROR: level folder not found: "{}"'.format(self.level_folder),
+                    bg=self.ERROR_COLOR
+                )
+                return
+
+        # gamedata\levels
+        else:
+            xray.game_level.read_game_level_textures(self.level_path, self.textures)
+
+        self.objects = list(self.objects)
+        self.objects.sort()
+
+        self.objects_folder = os.path.join(self.fs_dir, self.fs.values['$objects$'])
+        self.out_objects_folder = os.path.join(self.out_folder, self.fs.values['$objects$'])
+
+        self.game_tex_folder = os.path.join(self.fs_dir, self.fs.values['$game_textures$'])
+        self.out_game_tex_folder = os.path.join(self.out_folder, self.fs.values['$game_textures$'])
+
+        self.raw_tex_folder = os.path.join(self.fs_dir, self.fs.values['$textures$'])
+        self.out_raw_tex_folder = os.path.join(self.out_folder, self.fs.values['$textures$'])
+
+        if self.objects:
+            if not os.path.exists(self.out_objects_folder):
+                os.makedirs(self.out_objects_folder)
+
+            # copy *.object and *.thm for objects
+            for object_name in self.objects:
+
+                # *.object
+                object_path = os.path.join(self.objects_folder, object_name + os.extsep + 'object')
+                if os.path.exists(object_path):
+                    out_object_path = os.path.join(self.out_objects_folder, object_name + os.extsep + 'object')
+                    object_dir = os.path.dirname(out_object_path)
+                    if not os.path.exists(object_dir):
+                        os.makedirs(object_dir)
+                    shutil.copyfile(object_path, out_object_path)
+                    object_type = xray.object_format.get_object_textures(object_path, self.textures)
+
+                    # copy lod textures
+                    if object_type == 'MULIPLE_USAGE':
+                        lod_tex_path = 'lod' + os.sep + 'lod_' + object_name.replace(os.sep, '_')
+                        # source paths
+                        game_tex_path = os.path.join(self.game_tex_folder, lod_tex_path + os.extsep + 'dds')
+                        raw_tex_path = os.path.join(self.raw_tex_folder, lod_tex_path + os.extsep + 'tga')
+                        game_thm_path = os.path.join(self.game_tex_folder, lod_tex_path + os.extsep + 'thm')
+                        raw_thm_path = os.path.join(self.raw_tex_folder, lod_tex_path + os.extsep + 'thm')
+                        # output paths
+                        out_game_tex_path = os.path.join(self.out_game_tex_folder, lod_tex_path + os.extsep + 'dds')
+                        out_raw_tex_path = os.path.join(self.out_raw_tex_folder, lod_tex_path + os.extsep + 'tga')
+                        out_thm_path = os.path.join(self.out_game_tex_folder, lod_tex_path + os.extsep + 'thm')
+                        texs = [
+                            [game_tex_path, out_game_tex_path],
+                            [raw_tex_path, out_raw_tex_path],
+                            [game_thm_path, out_thm_path],
+                            [raw_thm_path, out_thm_path]
+                        ]
+                        for src, dist in texs:
+                            xray.utils.copy_file(src, dist, self.missing_files)
+                else:
+                    self.missing_files.add(object_path)
+
+                # *.thm
+                thm_path = os.path.join(self.objects_folder, object_name + os.extsep + 'thm')
+                if os.path.exists(thm_path):
+                    out_thm_path = os.path.join(self.out_objects_folder, object_name + os.extsep + 'thm')
+                    thm_dir = os.path.dirname(out_thm_path)
+                    if not os.path.exists(thm_dir):
+                        os.makedirs(thm_dir)
+                    shutil.copyfile(thm_path, out_thm_path)
+                else:
+                    self.missing_files.add(thm_path)
+
+        # copy textures *.dds, *.tga, *.thm
+        xray.utils.copy_files(
+            self.textures,
+            self.missing_files,
+            self.game_tex_folder,
+            self.raw_tex_folder,
+            self.out_game_tex_folder,
+            self.out_raw_tex_folder,
+            'dds',
+            'tga'
+        )
+
+        # copy sounds *.ogg, *.wav, *.thm
+        game_sounds_folder = os.path.join(self.fs_dir, self.fs.values['$game_sounds$'])
+        out_game_sounds_folder = os.path.join(self.out_folder, self.fs.values['$game_sounds$'])
+
+        raw_sounds_folder = os.path.join(self.fs_dir, self.fs.values['$sounds$'])
+        out_raw_sounds_folder = os.path.join(self.out_folder, self.fs.values['$sounds$'])
+
+        xray.utils.copy_files(
+            self.sounds,
+            self.missing_files,
+            game_sounds_folder,
+            raw_sounds_folder,
+            out_game_sounds_folder,
+            out_raw_sounds_folder,
+            'ogg',
+            'wav'
+        )
+
+        if self.level_path.startswith(self.maps_dir):
+            level_rel_path = os.path.splitext(self.level_path)[0][len(self.maps_dir) : ]
+    
+            # copy *.level file
+            level_main_file_output_path = os.path.join(output_level_dir, level_rel_path) + '.level'
+            xray.utils.copy_file(self.level_path, level_main_file_output_path, self.missing_files)
+
+            # copy *.part files
+            for file_name in os.listdir(self.level_folder):
+                part_name, part_ext = os.path.splitext(file_name)
+                if part_ext == '.part':
+                    part_src = os.path.join(self.level_folder, file_name)
+                    part_out = os.path.join(os.path.join(output_level_dir, level_rel_path), file_name)
+                    xray.utils.copy_file(part_src, part_out, self.missing_files)
+
+        # report
+        xray.utils.write_log(self.missing_files)
+        xray.utils.save_settings(self.fs_path, self.out_folder)
+        xray.utils.report_total_time(self.status_label, self.start_time)
+
 
 if __name__ == '__main__':
-    GUI()
+    ReourceCopier()
