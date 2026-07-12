@@ -13,7 +13,7 @@ file_name = release_name + '-' + ('.'.join(map(str, stalker_resource_copier.VERS
 with zipfile.ZipFile(file_name, 'w') as z:
     z.write(
         source_name + py_ext,
-        '{0}/{0}.pyw'.format(source_name),
+        '{0}/{0}{1}'.format(source_name, pyw_ext),
         compress_type=zipfile.ZIP_DEFLATED
     )
     z.write(
