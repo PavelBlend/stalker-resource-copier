@@ -4,6 +4,8 @@ import stalker_resource_copier
 
 
 prog_name = 'stalker resource copier'
+readme_file = 'README.md'
+xray_dir = 'xray'
 py_ext = '.py'
 pyw_ext = '.pyw'
 source_name = prog_name.replace(' ', '_')
@@ -17,16 +19,16 @@ with zipfile.ZipFile(file_name, 'w') as z:
         compress_type=zipfile.ZIP_DEFLATED
     )
     z.write(
-        'README.md',
-        '{}/README.md'.format(source_name),
+        readme_file,
+        '{0}/{1}'.format(source_name, readme_file),
         compress_type=zipfile.ZIP_DEFLATED
     )
-    for file in os.listdir('xray'):
+    for file in os.listdir(xray_dir):
         name, ext = os.path.splitext(file)
         if ext == py_ext:
             z.write(
-                'xray\\{0}{1}'.format(name, py_ext),
-                '{0}/xray/{1}.py'.format(source_name, name),
+                '{0}\\{1}{2}'.format(xray_dir, name, py_ext),
+                '{0}/{1}/{2}.py'.format(source_name, xray_dir, name),
                 compress_type=zipfile.ZIP_DEFLATED
             )
 
