@@ -259,171 +259,381 @@ def open_game_level():
     _set_entry_value(level_file, tkinter.filedialog.askopenfilename)
 
 
+class GUI:
+
+    def __init__(self):
+        self.init_params()
+        self.create_root_window()
+        self.create_main_frame()
+        self.create_widgets()
+        self.place_widgets()
+        self.bind_buttons()
+        self.load_settings()
+
+        self.root.mainloop()
+
+    def init_params(self):
+        # windows size
+        self.WINDOW_WIDTH = 640
+        self.WINDOW_HEIGHT = 130
+
+        # button size
+        self.BUTTON_WIDTH = 13
+        self.BUTTON_HEIGHT = 1
+
+        # entry size
+        self.ENTRY_WIDTH = 105
+
+        # widget colors
+        self.BACKGROUND_COLOR = '#808080'
+        self.ACTIVE_BACKGROUND_COLOR = '#A0A0A0'
+        self.BUTTON_COLOR = '#A0A0A0'
+        self.ACTIVE_BUTTON_COLOR = '#B3B3B3'
+        self.ERROR_COLOR = '#BC0000'
+        self.URL_COLOR = '#00007C'
+
+        # fonts
+        self.BUTTON_FONT = ('Font', 10, 'bold')
+        self.LABEL_FONT = ('Font', 8, 'bold')
+        self.ENTRY_FONT = ('Font', 7, 'bold')
+
+        # buttons text
+        self.COPY_RES_TEXT = 'copy resource'
+
+    def create_root_window(self):
+        self.root = tkinter.Tk()
+
+        self.root.resizable(height=False, width=False)
+        self.root.minsize(width=self.WINDOW_WIDTH, height=self.WINDOW_HEIGHT)
+        self.root.maxsize(width=self.WINDOW_WIDTH, height=self.WINDOW_HEIGHT)
+
+        self.root.title('S.T.A.L.K.E.R. Resource Copier')
+        self.root['bg'] = self.BACKGROUND_COLOR
+
+        display_center_x = (self.root.winfo_screenwidth()) / 2
+        display_center_y = (self.root.winfo_screenheight()) / 2
+
+        root_pos_x = display_center_x - self.WINDOW_WIDTH / 2
+        root_pos_y = display_center_y - self.WINDOW_HEIGHT / 2 - 50
+
+        self.root.geometry('+%d+%d' % (root_pos_x, root_pos_y))
+
+    def create_main_frame(self):
+        self.frame = tkinter.Frame(
+            self.root,
+            bg=self.BACKGROUND_COLOR,
+            width=self.WINDOW_WIDTH,
+            height=self.WINDOW_HEIGHT
+        )
+
+    def create_widgets(self):
+        self.create_entries()
+        self.create_labels()
+        self.create_buttons()
+
+    def create_entries(self):
+        self.fs_path_ent = tkinter.Entry(
+            self.frame,
+            width=self.ENTRY_WIDTH,
+            font=self.ENTRY_FONT,
+            bg=self.BUTTON_COLOR
+        )
+        self.output_path_ent = tkinter.Entry(
+            self.frame,
+            width=self.ENTRY_WIDTH,
+            font=self.ENTRY_FONT,
+            bg=self.BUTTON_COLOR
+        )
+        self.level_file = tkinter.Entry(
+            self.frame,
+            width=self.ENTRY_WIDTH,
+            font=self.ENTRY_FONT,
+            bg=self.BUTTON_COLOR
+        )
+
+    def create_labels(self):
+        ver_text = 'version:    {0}.{1}.{2}'.format(*VERSION)
+        date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
+
+        self.ver_label = tkinter.Label(
+            self.frame,
+            text=ver_text,
+            font=self.LABEL_FONT,
+            bg=xray.const.LABEL_COLOR
+        )
+        self.date_label = tkinter.Label(
+            self.frame,
+            text=date_text,
+            font=self.LABEL_FONT,
+            bg=xray.const.LABEL_COLOR
+        )
+        self.github_label = tkinter.Label(
+            self.frame,
+            text=xray.const.GITHUB_REPO_URL,
+            font=self.LABEL_FONT,
+            bg=xray.const.LABEL_COLOR,
+            fg=self.URL_COLOR,
+            cursor="hand2"
+        )
+        self.status_text_label = tkinter.Label(
+            self.frame,
+            text='status:',
+            font=self.LABEL_FONT,
+            bg=xray.const.LABEL_COLOR
+        )
+        self.status_label = tkinter.Label(
+            self.frame,
+            text='',
+            font=self.LABEL_FONT,
+            bg=xray.const.LABEL_COLOR
+        )
+        self.fs_path_label = tkinter.Label(
+            self.frame,
+            text='fs.ltx:',
+            font=self.LABEL_FONT,
+            bg=xray.const.LABEL_COLOR
+        )
+        self.output_path_label = tkinter.Label(
+            self.frame,
+            text='output:',
+            font=self.LABEL_FONT,
+            bg=xray.const.LABEL_COLOR
+        )
+        self.mode_label = tkinter.Label(
+            self.frame,
+            text='mode:',
+            font=self.LABEL_FONT,
+            bg=xray.const.LABEL_COLOR
+        )
+        self.level_name_label = tkinter.Label(
+            self.frame,
+            text='level:',
+            font=self.LABEL_FONT,
+            bg=xray.const.LABEL_COLOR
+        )
+
+    def create_buttons(self):
+        copy_res = CopyResource()
+
+        self.copy_resource_button = tkinter.Button(
+            self.frame,
+            text=self.COPY_RES_TEXT,
+            width=self.BUTTON_WIDTH,
+            height=self.BUTTON_HEIGHT,
+            bg=self.BUTTON_COLOR,
+            activebackground=self.ACTIVE_BUTTON_COLOR,
+            font=self.ENTRY_FONT,
+            command=copy_res.copy_resource
+        )
+        self.open_fs_button = tkinter.Button(
+            self.frame,
+            text='set',
+            command=open_fs,
+            bg=self.BUTTON_COLOR,
+            font=self.ENTRY_FONT,
+            width=5
+        )
+        self.set_output_button = tkinter.Button(
+            self.frame,
+            text='set',
+            command=set_output,
+            bg=self.BUTTON_COLOR,
+            font=self.ENTRY_FONT,
+            width=5
+        )
+        self.open_level_button = tkinter.Button(
+            self.frame,
+            text='set',
+            command=open_game_level,
+            bg=self.BUTTON_COLOR,
+            font=self.ENTRY_FONT,
+            width=5
+        )
+
+    def place_widgets(self):
+        self.init_place_params()
+        self.place_frame()
+        self.place_entries()
+        self.place_labels()
+        self.place_buttons()
+
+    def init_place_params(self):
+        # padding values
+        pad = 5
+        self.pad_x_rel = pad / self.WINDOW_WIDTH
+        self.pad_y_rel = pad / self.WINDOW_HEIGHT
+
+        # columns width
+        self.column_1_width = 70
+        self.column_3_width = 100
+        self.column_2_width = (self.WINDOW_WIDTH - pad * 2 - self.column_3_width) - (self.column_1_width + pad * 2)
+
+        # columns x offset
+        self.column_1_x = self.pad_x_rel
+        self.column_2_x = self.column_1_width / self.WINDOW_WIDTH + self.pad_x_rel * 2
+        self.column_3_x = 1.0 - (self.column_3_width + pad) / self.WINDOW_WIDTH
+
+        self.row_height = 20
+        offset_y = (pad + self.row_height) / self.WINDOW_HEIGHT
+
+        # rows y offset
+        self.row_1_y = self.pad_y_rel
+        self.row_2_y = (pad * 2 + self.row_height) / self.WINDOW_HEIGHT
+        self.row_3_y = self.row_2_y + offset_y
+        self.row_4_y = self.row_3_y + offset_y
+        self.row_5_y = self.row_4_y + offset_y
+
+    def place_frame(self):
+        self.frame.grid(row=0, column=0, pady=0)
+
+    def place_entries(self):
+        # fs.ltx entry
+        self.fs_path_ent.place(
+            relx=self.column_2_x,
+            rely=self.row_2_y,
+            width=self.column_2_width,
+            height=self.row_height
+        )
+
+        # output entry
+        self.output_path_ent.place(
+            relx=self.column_2_x,
+            rely=self.row_3_y,
+            width=self.column_2_width,
+            height=self.row_height
+        )
+
+        # level entry
+        self.level_file.place(
+            relx=self.column_2_x,
+            rely=self.row_4_y,
+            width=self.column_2_width,
+            height=self.row_height
+        )
+
+    def place_labels(self):
+        # date label
+        self.date_label.place(
+            relx=self.column_1_x,
+            rely=self.row_1_y,
+            width=self.column_1_width,
+            height=self.row_height
+        )
+
+        # github url
+        self.github_label.place(
+            relx=self.column_2_x,
+            rely=self.row_1_y,
+            width=self.column_2_width,
+            height=self.row_height
+        )
+
+        # version label
+        self.ver_label.place(
+            relx=self.column_3_x,
+            rely=self.row_1_y,
+            width=self.column_3_width,
+            height=self.row_height
+        )
+
+        # fs.ltx label
+        self.fs_path_label.place(
+            relx=self.column_1_x,
+            rely=self.row_2_y,
+            width=self.column_1_width,
+            height=self.row_height
+        )
+
+        # output label
+        self.output_path_label.place(
+            relx=self.column_1_x,
+            rely=self.row_3_y,
+            width=self.column_1_width,
+            height=self.row_height
+        )
+
+        # level label
+        self.level_name_label.place(
+            relx=self.column_1_x,
+            rely=self.row_4_y,
+            width=self.column_1_width,
+            height=self.row_height
+        )
+
+        # status text
+        self.status_text_label.place(
+            relx=self.column_1_x,
+            rely=self.row_5_y,
+            width=self.column_1_width,
+            height=self.row_height
+        )
+
+        # status label
+        self.status_label.place(
+            relx=self.column_2_x,
+            rely=self.row_5_y,
+            width=self.column_2_width,
+            height=self.row_height
+        )
+
+    def place_buttons(self):
+        # fs.ltx button
+        self.open_fs_button.place(
+            relx=self.column_3_x,
+            rely=self.row_2_y,
+            width=self.column_3_width,
+            height=self.row_height+1
+        )
+
+        # output button
+        self.set_output_button.place(
+            relx=self.column_3_x,
+            rely=self.row_3_y,
+            width=self.column_3_width,
+            height=self.row_height+1
+        )
+
+        # level button
+        self.open_level_button.place(
+            relx=self.column_3_x,
+            rely=self.row_4_y,
+            width=self.column_3_width,
+            height=self.row_height+1
+        )
+
+        # copy resource button
+        self.copy_resource_button.place(
+            relx=self.column_3_x,
+            rely=self.row_5_y,
+            width=self.column_3_width,
+            height=self.row_height
+        )
+
+    def bind_buttons(self):
+        self.github_label.bind('<Button-1>', xray.utils.visit_repo_page)
+
+    def load_settings(self):
+        if os.path.exists(xray.const.SETTINGS_FILE_NAME):
+            settings_parser = xray.ltx.LtxParser()
+            settings_parser.from_file(xray.const.SETTINGS_FILE_NAME)
+            default_settings = settings_parser.sections.get('default_settings', None)
+
+            if default_settings:
+
+                # set fs.ltx path
+                fs_path = default_settings.params[xray.const.FS_PATH_PROP]
+                fs_path = fs_path.replace('\\', os.sep)
+                fs_path = fs_path.replace('/', os.sep)
+                self.fs_path_ent.delete(0, last=tkinter.END)
+                self.fs_path_ent.insert(0, fs_path)
+
+                # set output path
+                out_path = default_settings.params[xray.const.OUT_FOLDER_PROP]
+                out_path = out_path.replace('\\', os.sep)
+                out_path = out_path.replace('/', os.sep)
+                self.output_path_ent.delete(0, last=tkinter.END)
+                self.output_path_ent.insert(0, out_path)
+
+
 if __name__ == '__main__':
-
-    WINDOW_WIDTH = 640
-    WINDOW_HEIGHT = 130
-    BACKGROUND_COLOR = '#808080'
-    ACTIVE_BACKGROUND_COLOR = '#A0A0A0'
-    BUTTON_COLOR = '#A0A0A0'
-    ERROR_COLOR = '#BC0000'
-    ACTIVE_BUTTON_COLOR = '#B3B3B3'
-    URL_COLOR = '#00007C'
-    BUTTON_FONT = ('Font', 10, 'bold')
-    LABEL_FONT = ('Font', 8, 'bold')
-    ENTRY_FONT = ('Font', 7, 'bold')
-    COPY_RES_TEXT = 'copy resource'
-    NONE_LEVEL = '-- none --'
-    BUTTON_WIDTH = 13
-    BUTTON_HEIGHT = 1
-
-    # root window
-    root = tkinter.Tk()
-    root.resizable(height=False, width=False)
-    root.minsize(width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
-    root.maxsize(width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
-    root.title('S.T.A.L.K.E.R. Resource Copier')
-    root['bg'] = BACKGROUND_COLOR
-    display_center_x = (root.winfo_screenwidth()) / 2
-    display_center_y = (root.winfo_screenheight()) / 2
-    root_pos_x = display_center_x - WINDOW_WIDTH / 2
-    root_pos_y = display_center_y - WINDOW_HEIGHT / 2 - 50
-    root.geometry('+%d+%d' % (root_pos_x, root_pos_y))
-
-    # main frame
-    frame = tkinter.Frame(root, bg=BACKGROUND_COLOR, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
-
-    # entry
-    fs_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
-    output_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
-
-    # labels
-    ver_label = tkinter.Label(frame, text='version:    {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-    date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
-    date_label = tkinter.Label(frame, text=date_text, font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-    github_label = tkinter.Label(frame, text=xray.const.GITHUB_REPO_URL, font=LABEL_FONT, bg=xray.const.LABEL_COLOR, fg=URL_COLOR, cursor="hand2")
-    status_text_label = tkinter.Label(frame, text='status:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-    status_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-    fs_path_label = tkinter.Label(frame, text='fs.ltx:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-    output_path_label = tkinter.Label(frame, text='output:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-    mode_label = tkinter.Label(frame, text='mode:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-    level_name_label = tkinter.Label(frame, text='level:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-
-    copy_res = CopyResource()
-
-    # buttons
-    copy_resource_button = tkinter.Button(
-        frame,
-        text=COPY_RES_TEXT,
-        width=BUTTON_WIDTH,
-        height=BUTTON_HEIGHT,
-        bg=BUTTON_COLOR,
-        activebackground=ACTIVE_BUTTON_COLOR,
-        font=ENTRY_FONT,
-        command=copy_res.copy_resource
-    )
-    open_fs_button = tkinter.Button(frame, text='set', command=open_fs, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
-    set_output_button = tkinter.Button(frame, text='set', command=set_output, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
-
-    # level file
-    level_file = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
-    open_game_level_button = tkinter.Button(frame, text='set', command=open_game_level, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
-
-    frame.grid(row=0, column=0, pady=0)
-
-    # padding values
-    pad = 5
-    pad_x_rel = pad / WINDOW_WIDTH
-    pad_y_rel = pad / WINDOW_HEIGHT
-
-    # columns width
-    column_1_width = 70
-    column_3_width = 100
-    column_2_width = (WINDOW_WIDTH - pad*2 - column_3_width) - (column_1_width + pad*2)
-
-    # columns x offset
-    column_1_x = pad_x_rel
-    column_2_x = column_1_width / WINDOW_WIDTH + pad_x_rel * 2
-    column_3_x = 1.0 - (column_3_width+pad) / WINDOW_WIDTH
-
-    row_height = 20
-    offset_y = (pad + row_height) / WINDOW_HEIGHT
-
-    # rows y offset
-    row_1_y = pad_y_rel
-    row_2_y = (pad*2 + row_height) / WINDOW_HEIGHT
-    row_3_y = row_2_y + offset_y
-    row_4_y = row_3_y + offset_y
-    row_5_y = row_4_y + offset_y
-
-    # date label
-    date_label.place(relx=column_1_x, rely=row_1_y, width=column_1_width, height=row_height)
-
-    # github url
-    github_label.place(relx=column_2_x, rely=row_1_y, width=column_2_width, height=row_height)
-
-    # version label
-    ver_label.place(relx=column_3_x, rely=row_1_y, width=column_3_width, height=row_height)
-
-    # fs.ltx label
-    fs_path_label.place(relx=column_1_x, rely=row_2_y, width=column_1_width, height=row_height)
-
-    # fs.ltx entry
-    fs_path_ent.place(relx=column_2_x, rely=row_2_y, width=column_2_width, height=row_height)
-
-    # fs.ltx button
-    open_fs_button.place(relx=column_3_x, rely=row_2_y, width=column_3_width, height=row_height+1)
-
-    # output label
-    output_path_label.place(relx=column_1_x, rely=row_3_y, width=column_1_width, height=row_height)
-
-    # output entry
-    output_path_ent.place(relx=column_2_x, rely=row_3_y, width=column_2_width, height=row_height)
-
-    # output button
-    set_output_button.place(relx=column_3_x, rely=row_3_y, width=column_3_width, height=row_height+1)
-
-    # level label
-    level_name_label.place(relx=column_1_x, rely=row_4_y, width=column_1_width, height=row_height)
-
-    # level entry
-    level_file.place(relx=column_2_x, rely=row_4_y, width=column_2_width, height=row_height)
-
-    # level button
-    open_game_level_button.place(relx=column_3_x, rely=row_4_y, width=column_3_width, height=row_height+1)
-
-    # status text
-    status_text_label.place(relx=column_1_x, rely=row_5_y, width=column_1_width, height=row_height)
-
-    # status label
-    status_label.place(relx=column_2_x, rely=row_5_y, width=column_2_width, height=row_height)
-
-    # copy resource button
-    copy_resource_button.place(relx=column_3_x, rely=row_5_y, width=column_3_width, height=row_height)
-
-    # bind
-    github_label.bind('<Button-1>', xray.utils.visit_repo_page)
-
-    # settings
-    if os.path.exists(xray.const.SETTINGS_FILE_NAME):
-        settings_parser = xray.ltx.LtxParser()
-        settings_parser.from_file(xray.const.SETTINGS_FILE_NAME)
-        default_settings = settings_parser.sections.get('default_settings', None)
-
-        if default_settings:
-
-            # set fs.ltx path
-            fs_path = default_settings.params[xray.const.FS_PATH_PROP]
-            fs_path = fs_path.replace('\\', os.sep)
-            fs_path = fs_path.replace('/', os.sep)
-            fs_path_ent.delete(0, last=tkinter.END)
-            fs_path_ent.insert(0, fs_path)
-
-            # set output path
-            out_path = default_settings.params[xray.const.OUT_FOLDER_PROP]
-            out_path = out_path.replace('\\', os.sep)
-            out_path = out_path.replace('/', os.sep)
-            output_path_ent.delete(0, last=tkinter.END)
-            output_path_ent.insert(0, out_path)
-
-    root.mainloop()
+    GUI()
