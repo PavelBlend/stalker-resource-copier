@@ -13,8 +13,6 @@ DATE = (2023, 5, 21)
 
 
 def copy_resource():
-    mode = mode_var.get()
-
     start_time = time.time()
 
     fs_path = fs_path_ent.get()
@@ -52,83 +50,77 @@ def copy_resource():
     sounds = set()
     missing_files = set()
 
-    if mode == 'source level':
-        maps_dir = os.path.join(fs_dir, fs.values['$maps$'])
-        output_level_dir = os.path.join(out_folder, fs.values['$maps$'])
-        level_name = level_name_var.get()
-        level_name = level_name.replace('/', os.sep)
-        level_name = level_name.replace('\\', os.sep)
+    # get level path
+    level_path = level_file.get()
+    level_path = level_path.replace('/', os.sep)
+    level_path = level_path.replace('\\', os.sep)
 
-        groups_dir = os.path.join(fs_dir, fs.values['$groups$'])
+    if not level_path:
+        status_label.configure(
+            text='ERROR: Level file not specified!',
+            bg=ERROR_COLOR
+        )
+        return
 
-        if level_name == NONE_LEVEL:
-            status_label.configure(
-                text='ERROR: Level not selected!',
-                bg=ERROR_COLOR
-            )
-            return
+    if os.path.exists(level_path):
 
-        level_folder = os.path.join(maps_dir, level_name)
-
-        if os.path.exists(level_folder):
-            for level_file in os.listdir(level_folder):
-                file_path = os.path.join(level_folder, level_file)
-
-                if level_file == 'scene_object.part':
-                    xray.scene_objects.read_scene_objects_part(file_path, objects)
-
-                elif level_file == 'detail_object.part':
-                    xray.scene_details.read_level_details(file_path, objects, textures)
-
-                elif level_file == 'glow.part':
-                    xray.scene_glows.read_level_glows(file_path, textures)
-
-                elif level_file == 'wallmark.part':
-                    xray.scene_wallmarks.read_level_wallmarks(file_path, textures)
-
-                elif level_file == 'sound_src.part':
-                    xray.scene_sound_source.read_sound_sources(file_path, sounds)
-
-                elif level_file == 'group.part':
-                    xray.scene_groups.read_level_groups(file_path, objects, groups_dir)
-
-        else:
-            status_label.configure(
-                text='ERROR: level folder not found: "{}"'.format(level_name),
-                bg=ERROR_COLOR
-            )
-            return
-
-    else:
-        # game level
-        file_path = game_level_file.get()
-        file_path = file_path.replace('/', os.sep)
-        file_path = file_path.replace('\\', os.sep)
-
-        if not file_path:
-            status_label.configure(
-                text='ERROR: Level file not specified!',
-                bg=ERROR_COLOR
-            )
-            return
-
-        if os.path.exists(file_path):
-
-            if os.path.isfile(file_path):
-                xray.game_level.read_game_level_textures(file_path, textures)
-            else:
-                status_label.configure(
-                    text='ERROR: Level file not exists!',
-                    bg=ERROR_COLOR
-                )
-                return
-
-        else:
+        if not os.path.isfile(level_path):
             status_label.configure(
                 text='ERROR: Level file not exists!',
                 bg=ERROR_COLOR
             )
             return
+
+    else:
+        status_label.configure(
+            text='ERROR: Level file not exists!',
+            bg=ERROR_COLOR
+        )
+        return
+
+    maps_dir = os.path.join(fs_dir, fs.values['$maps$'])
+    output_level_dir = os.path.join(out_folder, fs.values['$maps$'])
+
+    # rawdata\maps
+    if level_path.startswith(maps_dir):
+
+        groups_dir = os.path.join(fs_dir, fs.values['$groups$'])
+
+        level_folder = os.path.splitext(level_path)[0]
+
+        if os.path.exists(level_folder):
+
+            for file_name in os.listdir(level_folder):
+                file_path = os.path.join(level_folder, file_name)
+
+                if file_name == 'scene_object.part':
+                    xray.scene_objects.read_scene_objects_part(file_path, objects)
+
+                elif file_name == 'detail_object.part':
+                    xray.scene_details.read_level_details(file_path, objects, textures)
+
+                elif file_name == 'glow.part':
+                    xray.scene_glows.read_level_glows(file_path, textures)
+
+                elif file_name == 'wallmark.part':
+                    xray.scene_wallmarks.read_level_wallmarks(file_path, textures)
+
+                elif file_name == 'sound_src.part':
+                    xray.scene_sound_source.read_sound_sources(file_path, sounds)
+
+                elif file_name == 'group.part':
+                    xray.scene_groups.read_level_groups(file_path, objects, groups_dir)
+
+        else:
+            status_label.configure(
+                text='ERROR: level folder not found: "{}"'.format(level_folder),
+                bg=ERROR_COLOR
+            )
+            return
+
+    # gamedata\levels
+    else:
+        xray.game_level.read_game_level_textures(level_path, textures)
 
     objects = list(objects)
     objects.sort()
@@ -223,18 +215,19 @@ def copy_resource():
         'wav'
     )
 
-    if mode == 'source level':
+    if level_path.startswith(maps_dir):
+        level_rel_path = os.path.splitext(level_path)[0][len(maps_dir) : ]
+
         # copy *.level file
-        level_main_file_path = os.path.join(maps_dir, level_name) + os.extsep + 'level'
-        level_main_file_output_path = os.path.join(output_level_dir, level_name) + os.extsep + 'level'
-        xray.utils.copy_file(level_main_file_path, level_main_file_output_path, missing_files)
+        level_main_file_output_path = os.path.join(output_level_dir, level_rel_path, '.level')
+        xray.utils.copy_file(level_path, level_main_file_output_path, missing_files)
 
         # copy *.part files
-        for level_file in os.listdir(level_folder):
-            part_name, part_ext = os.path.splitext(level_file)
+        for file_name in os.listdir(level_folder):
+            part_name, part_ext = os.path.splitext(file_name)
             if part_ext == '.part':
-                part_src = os.path.join(level_folder, level_file)
-                part_out = os.path.join(os.path.join(output_level_dir, level_name), level_file)
+                part_src = os.path.join(level_folder, file_name)
+                part_out = os.path.join(os.path.join(output_level_dir, level_rel_path), file_name)
                 xray.utils.copy_file(part_src, part_out, missing_files)
 
     # report
@@ -243,70 +236,31 @@ def copy_resource():
     xray.utils.report_total_time(status_label, start_time)
 
 
+def _set_entry_value(entry, dialog_fun):
+    path = dialog_fun()
+    if path:
+        path = path.replace('\\', os.sep)
+        path = path.replace('/', os.sep)
+        entry.delete(0, last=tkinter.END)
+        entry.insert(0, path)
+
+
 def set_output():
-    dir_path = tkinter.filedialog.askdirectory()
-    if dir_path:
-        dir_path = dir_path.replace('\\', os.sep)
-        dir_path = dir_path.replace('/', os.sep)
-        output_path_ent.delete(0, last=tkinter.END)
-        output_path_ent.insert(0, dir_path)
-
-
-def add_levels_to_list(file_path):
-    if file_path and os.path.exists(file_path):
-        menu = level_list_menu['menu']
-        menu.delete(0, "end")
-        fs = xray.ltx.LtxParser()
-        fs.from_file(file_path)
-        fs_dir = os.path.dirname(file_path)
-        maps_dir = os.path.join(fs_dir, fs.values['$maps$'])
-        for root, dirs, files in os.walk(maps_dir):
-            for level_file in files:
-                level_abs_path = os.path.join(root, level_file)
-                if os.path.isfile(level_abs_path):
-                    level_name, level_ext = os.path.splitext(level_file)
-                    level_path = level_abs_path[len(maps_dir) : -len(level_ext)]
-                    if level_ext == '.level':
-                        menu.add_command(
-                            label=level_path,
-                            command=lambda value=level_path: level_name_var.set(value)
-                        )
+    _set_entry_value(output_path_ent, tkinter.filedialog.askdirectory)
 
 
 def open_fs():
-    file_path = tkinter.filedialog.askopenfilename()
-    if file_path:
-        file_path = file_path.replace('\\', os.sep)
-        file_path = file_path.replace('/', os.sep)
-        fs_path_ent.delete(0, last=tkinter.END)
-        fs_path_ent.insert(0, file_path)
-        add_levels_to_list(file_path)
+    _set_entry_value(fs_path_ent, tkinter.filedialog.askopenfilename)
 
 
 def open_game_level():
-    file_path = tkinter.filedialog.askopenfilename()
-    if file_path:
-        file_path = file_path.replace('\\', os.sep)
-        file_path = file_path.replace('/', os.sep)
-        game_level_file.delete(0, last=tkinter.END)
-        game_level_file.insert(0, file_path)
-
-
-def change_mode(event):
-    if mode_var.get() == 'source level':
-        game_level_file.place_forget()
-        open_game_level_button.place_forget()
-        level_list_menu.place(relx=file_x, rely=file_y, width=level_width, height=ver_height)
-    else:
-        level_list_menu.place_forget()
-        game_level_file.place(relx=file_x, rely=file_y, width=ent_width, height=ver_height)
-        open_game_level_button.place(relx=ver_x, rely=open_level_y, width=ver_width, height=ver_height+1)
+    _set_entry_value(level_file, tkinter.filedialog.askopenfilename)
 
 
 if __name__ == '__main__':
 
     WINDOW_WIDTH = 640
-    WINDOW_HEIGHT = 154
+    WINDOW_HEIGHT = 130
     BACKGROUND_COLOR = '#808080'
     ACTIVE_BACKGROUND_COLOR = '#A0A0A0'
     BUTTON_COLOR = '#A0A0A0'
@@ -334,10 +288,13 @@ if __name__ == '__main__':
     root_pos_y = display_center_y - WINDOW_HEIGHT / 2 - 50
     root.geometry('+%d+%d' % (root_pos_x, root_pos_y))
 
+    # main frame
     frame = tkinter.Frame(root, bg=BACKGROUND_COLOR, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
+
     # entry
     fs_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
     output_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
+
     # buttons
     copy_resource_button = tkinter.Button(
         frame,
@@ -351,6 +308,7 @@ if __name__ == '__main__':
     )
     open_fs_button = tkinter.Button(frame, text='set', command=open_fs, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
     set_output_button = tkinter.Button(frame, text='set', command=set_output, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
+
     # labels
     ver_label = tkinter.Label(frame, text='version:    {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
     date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
@@ -363,93 +321,81 @@ if __name__ == '__main__':
     mode_label = tkinter.Label(frame, text='mode:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
     level_name_label = tkinter.Label(frame, text='level:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
 
-    # mode menu
-    modes = ['source level', 'game level']
-    mode_var = tkinter.StringVar()
-    mode_var.set(modes[0])
-    mode_menu = tkinter.OptionMenu(frame, mode_var, *modes, command=change_mode)
-    mode_menu['menu'].config(font=LABEL_FONT, bg=BACKGROUND_COLOR)
-    mode_menu['highlightthickness'] = 0
-    mode_menu.config(
-        font=LABEL_FONT,
-        bg=BACKGROUND_COLOR,
-        activebackground=ACTIVE_BACKGROUND_COLOR,
-        width=32
-    )
-
-    # source files menu
-    level_list = [NONE_LEVEL, ]
-    level_name_var = tkinter.StringVar()
-    level_name_var.set(level_list[0])
-    level_list_menu = tkinter.OptionMenu(frame, level_name_var, *level_list)
-    level_list_menu['menu'].config(font=LABEL_FONT, bg=BACKGROUND_COLOR)
-    level_list_menu['highlightthickness'] = 0
-    level_list_menu.config(
-        font=LABEL_FONT,
-        bg=BACKGROUND_COLOR,
-        activebackground=ACTIVE_BACKGROUND_COLOR,
-        width=32
-    )
-
-    game_level_file = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
+    # level file
+    level_file = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
     open_game_level_button = tkinter.Button(frame, text='set', command=open_game_level, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
 
-    cur_row = 0
     frame.grid(row=0, column=0, pady=0)
 
+    # padding values
     pad = 5
     pad_x_rel = pad / WINDOW_WIDTH
     pad_y_rel = pad / WINDOW_HEIGHT
 
-    ver_width = 100
-    ver_x = 1.0 - (ver_width+pad) / WINDOW_WIDTH
-    ver_height = 20
-    date_width = 70
-    ver_label.place(relx=ver_x, rely=pad_y_rel, width=ver_width, height=ver_height)
-    date_label.place(relx=pad_x_rel, rely=pad_y_rel, width=date_width, height=ver_height)
+    # columns width
+    column_1_width = 70
+    column_3_width = 100
+    column_2_width = (WINDOW_WIDTH - pad*2 - column_3_width) - (column_1_width + pad*2)
 
-    # fs.ltx
-    fs_y = (pad*2 + ver_height) / WINDOW_HEIGHT
-    fs_width = 70
-    fs_path_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
+    # columns x offset
+    column_1_x = pad_x_rel
+    column_2_x = column_1_width / WINDOW_WIDTH + pad_x_rel * 2
+    column_3_x = 1.0 - (column_3_width+pad) / WINDOW_WIDTH
 
-    ent_x = fs_width / WINDOW_WIDTH + pad_x_rel * 2
-    ent_width = (WINDOW_WIDTH - pad*2 - ver_width) - (fs_width + pad*2)
-    fs_path_ent.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
+    row_height = 20
+    offset_y = (pad + row_height) / WINDOW_HEIGHT
 
-    open_fs_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height+1)
+    # rows y offset
+    row_1_y = pad_y_rel
+    row_2_y = (pad*2 + row_height) / WINDOW_HEIGHT
+    row_3_y = row_2_y + offset_y
+    row_4_y = row_3_y + offset_y
+    row_5_y = row_4_y + offset_y
 
-    # output
-    fs_y += (pad + ver_height) / WINDOW_HEIGHT
-    output_path_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
-    output_path_ent.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
-    set_output_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height+1)
+    # date label
+    date_label.place(relx=column_1_x, rely=row_1_y, width=column_1_width, height=row_height)
 
-    # mode
-    fs_y += (pad + ver_height) / WINDOW_HEIGHT
-    mode_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
-    mode_width = (WINDOW_WIDTH - pad) - (fs_width + pad*2)
-    mode_menu.place(relx=ent_x, rely=fs_y, width=mode_width, height=ver_height)
+    # github url
+    github_label.place(relx=column_2_x, rely=row_1_y, width=column_2_width, height=row_height)
 
-    # level
-    fs_y += (pad + ver_height) / WINDOW_HEIGHT
-    level_name_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
-    level_width = (WINDOW_WIDTH - pad) - (fs_width + pad*2)
+    # version label
+    ver_label.place(relx=column_3_x, rely=row_1_y, width=column_3_width, height=row_height)
 
-    file_x = ent_x
-    file_y = fs_y
-    open_level_y = fs_y
+    # fs.ltx label
+    fs_path_label.place(relx=column_1_x, rely=row_2_y, width=column_1_width, height=row_height)
 
-    change_mode(None)
+    # fs.ltx entry
+    fs_path_ent.place(relx=column_2_x, rely=row_2_y, width=column_2_width, height=row_height)
 
-    fs_y += (pad + ver_height) / WINDOW_HEIGHT
+    # fs.ltx button
+    open_fs_button.place(relx=column_3_x, rely=row_2_y, width=column_3_width, height=row_height+1)
 
-    github_label.place(relx=ent_x, rely=pad_y_rel, width=ent_width, height=ver_height)
+    # output label
+    output_path_label.place(relx=column_1_x, rely=row_3_y, width=column_1_width, height=row_height)
 
-    status_text_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
-    status_label.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
+    # output entry
+    output_path_ent.place(relx=column_2_x, rely=row_3_y, width=column_2_width, height=row_height)
 
-    copy_resource_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height)
+    # output button
+    set_output_button.place(relx=column_3_x, rely=row_3_y, width=column_3_width, height=row_height+1)
+
+    # level label
+    level_name_label.place(relx=column_1_x, rely=row_4_y, width=column_1_width, height=row_height)
+
+    # level entry
+    level_file.place(relx=column_2_x, rely=row_4_y, width=column_2_width, height=row_height)
+
+    # level button
+    open_game_level_button.place(relx=column_3_x, rely=row_4_y, width=column_3_width, height=row_height+1)
+
+    # status text
+    status_text_label.place(relx=column_1_x, rely=row_5_y, width=column_1_width, height=row_height)
+
+    # status label
+    status_label.place(relx=column_2_x, rely=row_5_y, width=column_2_width, height=row_height)
+
+    # copy resource button
+    copy_resource_button.place(relx=column_3_x, rely=row_5_y, width=column_3_width, height=row_height)
 
     # bind
     github_label.bind('<Button-1>', xray.utils.visit_repo_page)
@@ -461,18 +407,19 @@ if __name__ == '__main__':
         default_settings = settings_parser.sections.get('default_settings', None)
 
         if default_settings:
+
+            # set fs.ltx path
             fs_path = default_settings.params[xray.const.FS_PATH_PROP]
             fs_path = fs_path.replace('\\', os.sep)
             fs_path = fs_path.replace('/', os.sep)
             fs_path_ent.delete(0, last=tkinter.END)
             fs_path_ent.insert(0, fs_path)
 
+            # set output path
             out_path = default_settings.params[xray.const.OUT_FOLDER_PROP]
             out_path = out_path.replace('\\', os.sep)
             out_path = out_path.replace('/', os.sep)
             output_path_ent.delete(0, last=tkinter.END)
             output_path_ent.insert(0, out_path)
-
-            add_levels_to_list(default_settings.params[xray.const.FS_PATH_PROP])
 
     root.mainloop()
