@@ -12,7 +12,8 @@ VERSION = (1, 2, 0)
 DATE = (2023, 5, 21)
 
 
-class ReourceCopier:
+class ResourceCopier:
+    STATUS_OK = True
 
     def __init__(self):
         self.init_params()
@@ -422,7 +423,27 @@ class ReourceCopier:
     def copy_resource(self):
         self.start_time = time.time()
 
-        self.read_fs_ltx()
+        stages = (
+            self.read_fs_ltx,
+            self.get_output_folder,
+            self.init_collections,
+            self.get_level_path,
+            self.get_maps_dir,
+            self.collect_files,
+            self.get_folders,
+            self.copy_objects,
+            self.copy_textures,
+            self.copy_sounds,
+            self.copy_level
+        )
+
+        for stage in stages:
+            status = stage()
+
+            if not status:
+                return
+
+        self.report()
 
     def read_fs_ltx(self):
         self.fs_path = self.fs_path_ent.get()
@@ -440,6 +461,9 @@ class ReourceCopier:
         self.fs.from_file(self.fs_path)
         self.fs_dir = os.path.dirname(self.fs_path)
 
+        return self.STATUS_OK
+
+    def get_output_folder(self):
         self.out_folder = self.output_path_ent.get()
         self.out_folder = self.out_folder.replace('/', os.sep)
         self.out_folder = self.out_folder.replace('\\', os.sep)
@@ -454,13 +478,16 @@ class ReourceCopier:
             )
             return
 
-        # collect objects and textures
+        return self.STATUS_OK
+
+    def init_collections(self):
         self.objects = set()
         self.textures = set()
         self.sounds = set()
         self.missing_files = set()
+        return self.STATUS_OK
 
-        # get level path
+    def get_level_path(self):
         self.level_path = self.level_file.get()
         self.level_path = self.level_path.replace('/', os.sep)
         self.level_path = self.level_path.replace('\\', os.sep)
@@ -488,53 +515,62 @@ class ReourceCopier:
             )
             return
 
+        return self.STATUS_OK
+
+    def get_maps_dir(self):
         self.maps_dir = os.path.join(self.fs_dir, self.fs.values['$maps$'])
-        output_level_dir = os.path.join(self.out_folder, self.fs.values['$maps$'])
+        self.output_level_dir = os.path.join(self.out_folder, self.fs.values['$maps$'])
+        return self.STATUS_OK
 
-        # rawdata\maps
+    def collect_files(self):
         if self.level_path.startswith(self.maps_dir):
-
-            self.groups_dir = os.path.join(self.fs_dir, self.fs.values['$groups$'])
-
-            self.level_folder = os.path.splitext(self.level_path)[0]
-
-            if os.path.exists(self.level_folder):
-
-                for file_name in os.listdir(self.level_folder):
-                    file_path = os.path.join(self.level_folder, file_name)
-
-                    if file_name == 'scene_object.part':
-                        xray.scene_objects.read_scene_objects_part(file_path, self.objects)
-
-                    elif file_name == 'detail_object.part':
-                        xray.scene_details.read_level_details(file_path, self.objects, self.textures)
-
-                    elif file_name == 'glow.part':
-                        xray.scene_glows.read_level_glows(file_path, self.textures)
-
-                    elif file_name == 'wallmark.part':
-                        xray.scene_wallmarks.read_level_wallmarks(file_path, self.textures)
-
-                    elif file_name == 'sound_src.part':
-                        xray.scene_sound_source.read_sound_sources(file_path, self.sounds)
-
-                    elif file_name == 'group.part':
-                        xray.scene_groups.read_level_groups(file_path, self.objects, self.groups_dir)
-
-            else:
-                self.status_label.configure(
-                    text='ERROR: level folder not found: "{}"'.format(self.level_folder),
-                    bg=self.ERROR_COLOR
-                )
-                return
-
-        # gamedata\levels
+            status = self.collect_rawdata_files()
         else:
             xray.game_level.read_game_level_textures(self.level_path, self.textures)
+            status = self.STATUS_OK
+        return status
 
-        self.objects = list(self.objects)
-        self.objects.sort()
+    def collect_rawdata_files(self):
+        self.groups_dir = os.path.join(self.fs_dir, self.fs.values['$groups$'])
+        self.level_folder = os.path.splitext(self.level_path)[0]
 
+        if os.path.exists(self.level_folder):
+            self.collect_map_files()
+            self.objects = list(self.objects)
+            self.objects.sort()
+
+        else:
+            self.status_label.configure(
+                text='ERROR: level folder not found: "{}"'.format(self.level_folder),
+                bg=self.ERROR_COLOR
+            )
+            return
+
+        return self.STATUS_OK
+
+    def collect_map_files(self):
+        for file_name in os.listdir(self.level_folder):
+            file_path = os.path.join(self.level_folder, file_name)
+
+            if file_name == 'scene_object.part':
+                xray.scene_objects.read_scene_objects_part(file_path, self.objects)
+
+            elif file_name == 'detail_object.part':
+                xray.scene_details.read_level_details(file_path, self.objects, self.textures)
+
+            elif file_name == 'glow.part':
+                xray.scene_glows.read_level_glows(file_path, self.textures)
+
+            elif file_name == 'wallmark.part':
+                xray.scene_wallmarks.read_level_wallmarks(file_path, self.textures)
+
+            elif file_name == 'sound_src.part':
+                xray.scene_sound_source.read_sound_sources(file_path, self.sounds)
+
+            elif file_name == 'group.part':
+                xray.scene_groups.read_level_groups(file_path, self.objects, self.groups_dir)
+
+    def get_folders(self):
         self.objects_folder = os.path.join(self.fs_dir, self.fs.values['$objects$'])
         self.out_objects_folder = os.path.join(self.out_folder, self.fs.values['$objects$'])
 
@@ -544,6 +580,9 @@ class ReourceCopier:
         self.raw_tex_folder = os.path.join(self.fs_dir, self.fs.values['$textures$'])
         self.out_raw_tex_folder = os.path.join(self.out_folder, self.fs.values['$textures$'])
 
+        return self.STATUS_OK
+
+    def copy_objects(self):
         if self.objects:
             if not os.path.exists(self.out_objects_folder):
                 os.makedirs(self.out_objects_folder)
@@ -595,6 +634,9 @@ class ReourceCopier:
                 else:
                     self.missing_files.add(thm_path)
 
+        return self.STATUS_OK
+
+    def copy_textures(self):
         # copy textures *.dds, *.tga, *.thm
         xray.utils.copy_files(
             self.textures,
@@ -606,7 +648,9 @@ class ReourceCopier:
             'dds',
             'tga'
         )
+        return self.STATUS_OK
 
+    def copy_sounds(self):
         # copy sounds *.ogg, *.wav, *.thm
         game_sounds_folder = os.path.join(self.fs_dir, self.fs.values['$game_sounds$'])
         out_game_sounds_folder = os.path.join(self.out_folder, self.fs.values['$game_sounds$'])
@@ -624,12 +668,14 @@ class ReourceCopier:
             'ogg',
             'wav'
         )
+        return self.STATUS_OK
 
+    def copy_level(self):
         if self.level_path.startswith(self.maps_dir):
             level_rel_path = os.path.splitext(self.level_path)[0][len(self.maps_dir) : ]
     
             # copy *.level file
-            level_main_file_output_path = os.path.join(output_level_dir, level_rel_path) + '.level'
+            level_main_file_output_path = os.path.join(self.output_level_dir, level_rel_path) + '.level'
             xray.utils.copy_file(self.level_path, level_main_file_output_path, self.missing_files)
 
             # copy *.part files
@@ -637,14 +683,16 @@ class ReourceCopier:
                 part_name, part_ext = os.path.splitext(file_name)
                 if part_ext == '.part':
                     part_src = os.path.join(self.level_folder, file_name)
-                    part_out = os.path.join(os.path.join(output_level_dir, level_rel_path), file_name)
+                    part_out = os.path.join(os.path.join(self.output_level_dir, level_rel_path), file_name)
                     xray.utils.copy_file(part_src, part_out, self.missing_files)
 
-        # report
+        return self.STATUS_OK
+
+    def report(self):
         xray.utils.write_log(self.missing_files)
         xray.utils.save_settings(self.fs_path, self.out_folder)
         xray.utils.report_total_time(self.status_label, self.start_time)
 
 
 if __name__ == '__main__':
-    ReourceCopier()
+    ResourceCopier()
