@@ -47,10 +47,11 @@ def write_log(missing_files):
             log_file.write(log_line)
 
 
-def save_settings(fs_path, out_folder):
+def save_settings(fs_path, out_folder, level_path):
     settings_text = '[default_settings]\n'
     settings_text += '{0} = "{1}"\n'.format(const.FS_PATH_PROP, fs_path)
     settings_text += '{0} = "{1}"\n'.format(const.OUT_FOLDER_PROP, out_folder)
+    settings_text += '{0} = "{1}"\n'.format(const.LEVEL_PATH_PROP, level_path)
 
     with open(const.SETTINGS_FILE_NAME, 'w', encoding='utf-8') as file:
         file.write(settings_text)

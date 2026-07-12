@@ -86,19 +86,24 @@ class ResourceCopier:
         self.create_buttons()
 
     def create_entries(self):
+        # fs.ltx entry
         self.fs_path_ent = tkinter.Entry(
             self.frame,
             width=self.ENTRY_WIDTH,
             font=self.ENTRY_FONT,
             bg=self.BUTTON_COLOR
         )
+
+        # output entry
         self.output_path_ent = tkinter.Entry(
             self.frame,
             width=self.ENTRY_WIDTH,
             font=self.ENTRY_FONT,
             bg=self.BUTTON_COLOR
         )
-        self.level_file = tkinter.Entry(
+
+        # level entry
+        self.level_file_ent = tkinter.Entry(
             self.frame,
             width=self.ENTRY_WIDTH,
             font=self.ENTRY_FONT,
@@ -106,21 +111,27 @@ class ResourceCopier:
         )
 
     def create_labels(self):
+        # label text
         ver_text = 'version:    {0}.{1}.{2}'.format(*VERSION)
         date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
 
+        # version label
         self.ver_label = tkinter.Label(
             self.frame,
             text=ver_text,
             font=self.LABEL_FONT,
             bg=xray.const.LABEL_COLOR
         )
+
+        # date label
         self.date_label = tkinter.Label(
             self.frame,
             text=date_text,
             font=self.LABEL_FONT,
             bg=xray.const.LABEL_COLOR
         )
+
+        # url label
         self.github_label = tkinter.Label(
             self.frame,
             text=xray.const.GITHUB_REPO_URL,
@@ -129,36 +140,40 @@ class ResourceCopier:
             fg=self.URL_COLOR,
             cursor="hand2"
         )
+
+        # status text label
         self.status_text_label = tkinter.Label(
             self.frame,
             text='status:',
             font=self.LABEL_FONT,
             bg=xray.const.LABEL_COLOR
         )
+
+        # status label
         self.status_label = tkinter.Label(
             self.frame,
             text='',
             font=self.LABEL_FONT,
             bg=xray.const.LABEL_COLOR
         )
+
+        # fs.ltx label
         self.fs_path_label = tkinter.Label(
             self.frame,
             text='fs.ltx:',
             font=self.LABEL_FONT,
             bg=xray.const.LABEL_COLOR
         )
+
+        # output label
         self.output_path_label = tkinter.Label(
             self.frame,
             text='output:',
             font=self.LABEL_FONT,
             bg=xray.const.LABEL_COLOR
         )
-        self.mode_label = tkinter.Label(
-            self.frame,
-            text='mode:',
-            font=self.LABEL_FONT,
-            bg=xray.const.LABEL_COLOR
-        )
+
+        # lavel label
         self.level_name_label = tkinter.Label(
             self.frame,
             text='level:',
@@ -263,7 +278,7 @@ class ResourceCopier:
         )
 
         # level entry
-        self.level_file.place(
+        self.level_file_ent.place(
             relx=self.column_2_x,
             rely=self.row_4_y,
             width=self.column_2_width,
@@ -380,18 +395,28 @@ class ResourceCopier:
             if def_stngs:
 
                 # set fs.ltx path
-                fs_path = def_stngs.params[xray.const.FS_PATH_PROP]
-                fs_path = fs_path.replace('\\', os.sep)
-                fs_path = fs_path.replace('/', os.sep)
-                self.fs_path_ent.delete(0, last=tkinter.END)
-                self.fs_path_ent.insert(0, fs_path)
+                fs_path = def_stngs.params.get(xray.const.FS_PATH_PROP)
+                if fs_path:
+                    fs_path = fs_path.replace('\\', os.sep)
+                    fs_path = fs_path.replace('/', os.sep)
+                    self.fs_path_ent.delete(0, last=tkinter.END)
+                    self.fs_path_ent.insert(0, fs_path)
 
                 # set output path
-                out_path = def_stngs.params[xray.const.OUT_FOLDER_PROP]
-                out_path = out_path.replace('\\', os.sep)
-                out_path = out_path.replace('/', os.sep)
-                self.output_path_ent.delete(0, last=tkinter.END)
-                self.output_path_ent.insert(0, out_path)
+                out_path = def_stngs.params.get(xray.const.OUT_FOLDER_PROP)
+                if out_path:
+                    out_path = out_path.replace('\\', os.sep)
+                    out_path = out_path.replace('/', os.sep)
+                    self.output_path_ent.delete(0, last=tkinter.END)
+                    self.output_path_ent.insert(0, out_path)
+
+                # set level path
+                level_path = def_stngs.params.get(xray.const.LEVEL_PATH_PROP)
+                if level_path:
+                    level_path = level_path.replace('\\', os.sep)
+                    level_path = level_path.replace('/', os.sep)
+                    self.level_file_ent.delete(0, last=tkinter.END)
+                    self.level_file_ent.insert(0, level_path)
 
     def _set_entry_value(self, entry, dialog_fun):
         path = dialog_fun()
@@ -415,7 +440,7 @@ class ResourceCopier:
 
     def open_game_level(self):
         self._set_entry_value(
-            self.level_file,
+            self.level_file_ent,
             tkinter.filedialog.askopenfilename
         )
 
@@ -488,7 +513,7 @@ class ResourceCopier:
         return self.STATUS_OK
 
     def get_level_path(self):
-        self.level_path = self.level_file.get()
+        self.level_path = self.level_file_ent.get()
         self.level_path = self.level_path.replace('/', os.sep)
         self.level_path = self.level_path.replace('\\', os.sep)
 
@@ -690,7 +715,7 @@ class ResourceCopier:
 
     def report(self):
         xray.utils.write_log(self.missing_files)
-        xray.utils.save_settings(self.fs_path, self.out_folder)
+        xray.utils.save_settings(self.fs_path, self.out_folder, self.level_path)
         xray.utils.report_total_time(self.status_label, self.start_time)
 
 
