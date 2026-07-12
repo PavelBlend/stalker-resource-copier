@@ -473,4 +473,5 @@ if os.path.exists(xray.const.SETTINGS_FILE_NAME):
 
         add_levels_to_list(default_settings.params[xray.const.FS_PATH_PROP])
 
-root.mainloop()
+if __name__ == '__main__':
+    root.mainloop()
