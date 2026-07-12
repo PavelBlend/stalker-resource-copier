@@ -4,26 +4,29 @@ import stalker_resource_copier
 
 
 prog_name = 'stalker resource copier'
+py_ext = '.py'
+pyw_ext = '.pyw'
+source_name = prog_name.replace(' ', '_')
 release_name = prog_name.replace(' ', '-')
 file_name = release_name + '-' + ('.'.join(map(str, stalker_resource_copier.VERSION))) + '.zip'
 
 with zipfile.ZipFile(file_name, 'w') as z:
     z.write(
-        'stalker_resource_copier.py',
-        'stalker_resource_copier/stalker_resource_copier.pyw',
+        source_name + py_ext,
+        '{0}/{0}.pyw'.format(source_name),
         compress_type=zipfile.ZIP_DEFLATED
     )
     z.write(
         'README.md',
-        'stalker_resource_copier/README.md',
+        '{}/README.md'.format(source_name),
         compress_type=zipfile.ZIP_DEFLATED
     )
     for file in os.listdir('xray'):
         name, ext = os.path.splitext(file)
-        if ext == '.py':
+        if ext == py_ext:
             z.write(
-                'xray\\{}.py'.format(name),
-                'stalker_resource_copier/xray/{}.py'.format(name),
+                'xray\\{0}{1}'.format(name, py_ext),
+                '{0}/xray/{1}.py'.format(source_name, name),
                 compress_type=zipfile.ZIP_DEFLATED
             )
 
