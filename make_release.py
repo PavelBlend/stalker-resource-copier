@@ -30,13 +30,13 @@ with zipfile.ZipFile(file_name, 'w') as release_zip:
     readme_dist = '{0}/{1}{2}'.format(source_name, readme_file, md_ext)
     release_zip.write(readme_src, readme_dist, compress_type=compss_type)
 
+    # write xray files
     for file in os.listdir(xray_dir):
         name, ext = os.path.splitext(file)
+
         if ext == py_ext:
-            release_zip.write(
-                '{0}\\{1}{2}'.format(xray_dir, name, py_ext),
-                '{0}/{1}/{2}.py'.format(source_name, xray_dir, name),
-                compress_type=compss_type
-            )
+            py_src = '{0}/{1}'.format(xray_dir, file)
+            py_dist = '{0}/{1}/{2}'.format(source_name, xray_dir, file)
+            release_zip.write(py_src, py_dist, compress_type=compss_type)
 
 input('Finish!')
