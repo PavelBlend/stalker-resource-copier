@@ -303,175 +303,176 @@ def change_mode(event):
         open_game_level_button.place(relx=ver_x, rely=open_level_y, width=ver_width, height=ver_height+1)
 
 
-WINDOW_WIDTH = 640
-WINDOW_HEIGHT = 154
-BACKGROUND_COLOR = '#808080'
-ACTIVE_BACKGROUND_COLOR = '#A0A0A0'
-BUTTON_COLOR = '#A0A0A0'
-ERROR_COLOR = '#BC0000'
-ACTIVE_BUTTON_COLOR = '#B3B3B3'
-URL_COLOR = '#00007C'
-BUTTON_FONT = ('Font', 10, 'bold')
-LABEL_FONT = ('Font', 8, 'bold')
-ENTRY_FONT = ('Font', 7, 'bold')
-COPY_RES_TEXT = 'copy resource'
-NONE_LEVEL = '-- none --'
-BUTTON_WIDTH = 13
-BUTTON_HEIGHT = 1
-
-# root window
-root = tkinter.Tk()
-root.resizable(height=False, width=False)
-root.minsize(width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
-root.maxsize(width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
-root.title('S.T.A.L.K.E.R. Resource Copier')
-root['bg'] = BACKGROUND_COLOR
-display_center_x = (root.winfo_screenwidth()) / 2
-display_center_y = (root.winfo_screenheight()) / 2
-root_pos_x = display_center_x - WINDOW_WIDTH / 2
-root_pos_y = display_center_y - WINDOW_HEIGHT / 2 - 50
-root.geometry('+%d+%d' % (root_pos_x, root_pos_y))
-
-frame = tkinter.Frame(root, bg=BACKGROUND_COLOR, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
-# entry
-fs_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
-output_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
-# buttons
-copy_resource_button = tkinter.Button(
-    frame,
-    text=COPY_RES_TEXT,
-    width=BUTTON_WIDTH,
-    height=BUTTON_HEIGHT,
-    bg=BUTTON_COLOR,
-    activebackground=ACTIVE_BUTTON_COLOR,
-    font=ENTRY_FONT,
-    command=copy_resource
-)
-open_fs_button = tkinter.Button(frame, text='set', command=open_fs, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
-set_output_button = tkinter.Button(frame, text='set', command=set_output, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
-# labels
-ver_label = tkinter.Label(frame, text='version:    {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
-date_label = tkinter.Label(frame, text=date_text, font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-github_label = tkinter.Label(frame, text=xray.const.GITHUB_REPO_URL, font=LABEL_FONT, bg=xray.const.LABEL_COLOR, fg=URL_COLOR, cursor="hand2")
-status_text_label = tkinter.Label(frame, text='status:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-status_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-fs_path_label = tkinter.Label(frame, text='fs.ltx:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-output_path_label = tkinter.Label(frame, text='output:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-mode_label = tkinter.Label(frame, text='mode:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-level_name_label = tkinter.Label(frame, text='level:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
-
-# mode menu
-modes = ['source level', 'game level']
-mode_var = tkinter.StringVar()
-mode_var.set(modes[0])
-mode_menu = tkinter.OptionMenu(frame, mode_var, *modes, command=change_mode)
-mode_menu['menu'].config(font=LABEL_FONT, bg=BACKGROUND_COLOR)
-mode_menu['highlightthickness'] = 0
-mode_menu.config(
-    font=LABEL_FONT,
-    bg=BACKGROUND_COLOR,
-    activebackground=ACTIVE_BACKGROUND_COLOR,
-    width=32
-)
-
-# source files menu
-level_list = [NONE_LEVEL, ]
-level_name_var = tkinter.StringVar()
-level_name_var.set(level_list[0])
-level_list_menu = tkinter.OptionMenu(frame, level_name_var, *level_list)
-level_list_menu['menu'].config(font=LABEL_FONT, bg=BACKGROUND_COLOR)
-level_list_menu['highlightthickness'] = 0
-level_list_menu.config(
-    font=LABEL_FONT,
-    bg=BACKGROUND_COLOR,
-    activebackground=ACTIVE_BACKGROUND_COLOR,
-    width=32
-)
-
-game_level_file = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
-open_game_level_button = tkinter.Button(frame, text='set', command=open_game_level, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
-
-cur_row = 0
-frame.grid(row=0, column=0, pady=0)
-
-pad = 5
-pad_x_rel = pad / WINDOW_WIDTH
-pad_y_rel = pad / WINDOW_HEIGHT
-
-ver_width = 100
-ver_x = 1.0 - (ver_width+pad) / WINDOW_WIDTH
-ver_height = 20
-date_width = 70
-ver_label.place(relx=ver_x, rely=pad_y_rel, width=ver_width, height=ver_height)
-date_label.place(relx=pad_x_rel, rely=pad_y_rel, width=date_width, height=ver_height)
-
-# fs.ltx
-fs_y = (pad*2 + ver_height) / WINDOW_HEIGHT
-fs_width = 70
-fs_path_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
-
-ent_x = fs_width / WINDOW_WIDTH + pad_x_rel * 2
-ent_width = (WINDOW_WIDTH - pad*2 - ver_width) - (fs_width + pad*2)
-fs_path_ent.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
-
-open_fs_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height+1)
-
-# output
-fs_y += (pad + ver_height) / WINDOW_HEIGHT
-output_path_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
-output_path_ent.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
-set_output_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height+1)
-
-# mode
-fs_y += (pad + ver_height) / WINDOW_HEIGHT
-mode_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
-mode_width = (WINDOW_WIDTH - pad) - (fs_width + pad*2)
-mode_menu.place(relx=ent_x, rely=fs_y, width=mode_width, height=ver_height)
-
-# level
-fs_y += (pad + ver_height) / WINDOW_HEIGHT
-level_name_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
-level_width = (WINDOW_WIDTH - pad) - (fs_width + pad*2)
-
-file_x = ent_x
-file_y = fs_y
-open_level_y = fs_y
-
-change_mode(None)
-
-fs_y += (pad + ver_height) / WINDOW_HEIGHT
-
-github_label.place(relx=ent_x, rely=pad_y_rel, width=ent_width, height=ver_height)
-
-status_text_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
-status_label.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
-
-copy_resource_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height)
-
-# bind
-github_label.bind('<Button-1>', xray.utils.visit_repo_page)
-
-# settings
-if os.path.exists(xray.const.SETTINGS_FILE_NAME):
-    settings_parser = xray.ltx.LtxParser()
-    settings_parser.from_file(xray.const.SETTINGS_FILE_NAME)
-    default_settings = settings_parser.sections.get('default_settings', None)
-
-    if default_settings:
-        fs_path = default_settings.params[xray.const.FS_PATH_PROP]
-        fs_path = fs_path.replace('\\', os.sep)
-        fs_path = fs_path.replace('/', os.sep)
-        fs_path_ent.delete(0, last=tkinter.END)
-        fs_path_ent.insert(0, fs_path)
-
-        out_path = default_settings.params[xray.const.OUT_FOLDER_PROP]
-        out_path = out_path.replace('\\', os.sep)
-        out_path = out_path.replace('/', os.sep)
-        output_path_ent.delete(0, last=tkinter.END)
-        output_path_ent.insert(0, out_path)
-
-        add_levels_to_list(default_settings.params[xray.const.FS_PATH_PROP])
-
 if __name__ == '__main__':
+
+    WINDOW_WIDTH = 640
+    WINDOW_HEIGHT = 154
+    BACKGROUND_COLOR = '#808080'
+    ACTIVE_BACKGROUND_COLOR = '#A0A0A0'
+    BUTTON_COLOR = '#A0A0A0'
+    ERROR_COLOR = '#BC0000'
+    ACTIVE_BUTTON_COLOR = '#B3B3B3'
+    URL_COLOR = '#00007C'
+    BUTTON_FONT = ('Font', 10, 'bold')
+    LABEL_FONT = ('Font', 8, 'bold')
+    ENTRY_FONT = ('Font', 7, 'bold')
+    COPY_RES_TEXT = 'copy resource'
+    NONE_LEVEL = '-- none --'
+    BUTTON_WIDTH = 13
+    BUTTON_HEIGHT = 1
+
+    # root window
+    root = tkinter.Tk()
+    root.resizable(height=False, width=False)
+    root.minsize(width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
+    root.maxsize(width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
+    root.title('S.T.A.L.K.E.R. Resource Copier')
+    root['bg'] = BACKGROUND_COLOR
+    display_center_x = (root.winfo_screenwidth()) / 2
+    display_center_y = (root.winfo_screenheight()) / 2
+    root_pos_x = display_center_x - WINDOW_WIDTH / 2
+    root_pos_y = display_center_y - WINDOW_HEIGHT / 2 - 50
+    root.geometry('+%d+%d' % (root_pos_x, root_pos_y))
+
+    frame = tkinter.Frame(root, bg=BACKGROUND_COLOR, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
+    # entry
+    fs_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
+    output_path_ent = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
+    # buttons
+    copy_resource_button = tkinter.Button(
+        frame,
+        text=COPY_RES_TEXT,
+        width=BUTTON_WIDTH,
+        height=BUTTON_HEIGHT,
+        bg=BUTTON_COLOR,
+        activebackground=ACTIVE_BUTTON_COLOR,
+        font=ENTRY_FONT,
+        command=copy_resource
+    )
+    open_fs_button = tkinter.Button(frame, text='set', command=open_fs, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
+    set_output_button = tkinter.Button(frame, text='set', command=set_output, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
+    # labels
+    ver_label = tkinter.Label(frame, text='version:    {0}.{1}.{2}'.format(*VERSION), font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+    date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
+    date_label = tkinter.Label(frame, text=date_text, font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+    github_label = tkinter.Label(frame, text=xray.const.GITHUB_REPO_URL, font=LABEL_FONT, bg=xray.const.LABEL_COLOR, fg=URL_COLOR, cursor="hand2")
+    status_text_label = tkinter.Label(frame, text='status:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+    status_label = tkinter.Label(frame, text='', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+    fs_path_label = tkinter.Label(frame, text='fs.ltx:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+    output_path_label = tkinter.Label(frame, text='output:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+    mode_label = tkinter.Label(frame, text='mode:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+    level_name_label = tkinter.Label(frame, text='level:', font=LABEL_FONT, bg=xray.const.LABEL_COLOR)
+
+    # mode menu
+    modes = ['source level', 'game level']
+    mode_var = tkinter.StringVar()
+    mode_var.set(modes[0])
+    mode_menu = tkinter.OptionMenu(frame, mode_var, *modes, command=change_mode)
+    mode_menu['menu'].config(font=LABEL_FONT, bg=BACKGROUND_COLOR)
+    mode_menu['highlightthickness'] = 0
+    mode_menu.config(
+        font=LABEL_FONT,
+        bg=BACKGROUND_COLOR,
+        activebackground=ACTIVE_BACKGROUND_COLOR,
+        width=32
+    )
+
+    # source files menu
+    level_list = [NONE_LEVEL, ]
+    level_name_var = tkinter.StringVar()
+    level_name_var.set(level_list[0])
+    level_list_menu = tkinter.OptionMenu(frame, level_name_var, *level_list)
+    level_list_menu['menu'].config(font=LABEL_FONT, bg=BACKGROUND_COLOR)
+    level_list_menu['highlightthickness'] = 0
+    level_list_menu.config(
+        font=LABEL_FONT,
+        bg=BACKGROUND_COLOR,
+        activebackground=ACTIVE_BACKGROUND_COLOR,
+        width=32
+    )
+
+    game_level_file = tkinter.Entry(frame, width=105, font=ENTRY_FONT, bg=BUTTON_COLOR)
+    open_game_level_button = tkinter.Button(frame, text='set', command=open_game_level, bg=BUTTON_COLOR, font=ENTRY_FONT, width=5)
+
+    cur_row = 0
+    frame.grid(row=0, column=0, pady=0)
+
+    pad = 5
+    pad_x_rel = pad / WINDOW_WIDTH
+    pad_y_rel = pad / WINDOW_HEIGHT
+
+    ver_width = 100
+    ver_x = 1.0 - (ver_width+pad) / WINDOW_WIDTH
+    ver_height = 20
+    date_width = 70
+    ver_label.place(relx=ver_x, rely=pad_y_rel, width=ver_width, height=ver_height)
+    date_label.place(relx=pad_x_rel, rely=pad_y_rel, width=date_width, height=ver_height)
+
+    # fs.ltx
+    fs_y = (pad*2 + ver_height) / WINDOW_HEIGHT
+    fs_width = 70
+    fs_path_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
+
+    ent_x = fs_width / WINDOW_WIDTH + pad_x_rel * 2
+    ent_width = (WINDOW_WIDTH - pad*2 - ver_width) - (fs_width + pad*2)
+    fs_path_ent.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
+
+    open_fs_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height+1)
+
+    # output
+    fs_y += (pad + ver_height) / WINDOW_HEIGHT
+    output_path_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
+    output_path_ent.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
+    set_output_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height+1)
+
+    # mode
+    fs_y += (pad + ver_height) / WINDOW_HEIGHT
+    mode_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
+    mode_width = (WINDOW_WIDTH - pad) - (fs_width + pad*2)
+    mode_menu.place(relx=ent_x, rely=fs_y, width=mode_width, height=ver_height)
+
+    # level
+    fs_y += (pad + ver_height) / WINDOW_HEIGHT
+    level_name_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
+    level_width = (WINDOW_WIDTH - pad) - (fs_width + pad*2)
+
+    file_x = ent_x
+    file_y = fs_y
+    open_level_y = fs_y
+
+    change_mode(None)
+
+    fs_y += (pad + ver_height) / WINDOW_HEIGHT
+
+    github_label.place(relx=ent_x, rely=pad_y_rel, width=ent_width, height=ver_height)
+
+    status_text_label.place(relx=pad_x_rel, rely=fs_y, width=fs_width, height=ver_height)
+    status_label.place(relx=ent_x, rely=fs_y, width=ent_width, height=ver_height)
+
+    copy_resource_button.place(relx=ver_x, rely=fs_y, width=ver_width, height=ver_height)
+
+    # bind
+    github_label.bind('<Button-1>', xray.utils.visit_repo_page)
+
+    # settings
+    if os.path.exists(xray.const.SETTINGS_FILE_NAME):
+        settings_parser = xray.ltx.LtxParser()
+        settings_parser.from_file(xray.const.SETTINGS_FILE_NAME)
+        default_settings = settings_parser.sections.get('default_settings', None)
+
+        if default_settings:
+            fs_path = default_settings.params[xray.const.FS_PATH_PROP]
+            fs_path = fs_path.replace('\\', os.sep)
+            fs_path = fs_path.replace('/', os.sep)
+            fs_path_ent.delete(0, last=tkinter.END)
+            fs_path_ent.insert(0, fs_path)
+
+            out_path = default_settings.params[xray.const.OUT_FOLDER_PROP]
+            out_path = out_path.replace('\\', os.sep)
+            out_path = out_path.replace('/', os.sep)
+            output_path_ent.delete(0, last=tkinter.END)
+            output_path_ent.insert(0, out_path)
+
+            add_levels_to_list(default_settings.params[xray.const.FS_PATH_PROP])
+
     root.mainloop()
