@@ -12,12 +12,14 @@ source_name = prog_name.replace(' ', '_')
 release_name = prog_name.replace(' ', '-')
 file_name = release_name + '-' + ('.'.join(map(str, stalker_resource_copier.VERSION))) + '.zip'
 
+# write .zip file
 with zipfile.ZipFile(file_name, 'w') as z:
-    z.write(
-        source_name + py_ext,
-        '{0}/{0}{1}'.format(source_name, pyw_ext),
-        compress_type=zipfile.ZIP_DEFLATED
-    )
+
+    # write main source file
+    main_src = source_name + py_ext
+    main_dist = '{0}/{0}{1}'.format(source_name, pyw_ext)
+    z.write(main_src, main_dist, compress_type=zipfile.ZIP_DEFLATED)
+
     z.write(
         readme_file,
         '{0}/{1}'.format(source_name, readme_file),
