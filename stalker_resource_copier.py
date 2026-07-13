@@ -633,6 +633,62 @@ class ResourceCopier:
 
         return self.STATUS_OK
 
+    def copy_lod(self, object_name, object_path):
+        # copy lod textures
+
+        object_type = xray.object_format.get_object_textures(object_path, self.textures)
+
+        if object_type == 'MULIPLE_USAGE':
+
+            lod_tex_path = 'lod' + os.sep + 'lod_' + object_name.replace(os.sep, '_')
+
+            # source paths
+            game_tex_path = os.path.join(self.game_tex_folder, lod_tex_path + os.extsep + 'dds')
+            raw_tex_path  = os.path.join(self.raw_tex_folder,  lod_tex_path + os.extsep + 'tga')
+            game_thm_path = os.path.join(self.game_tex_folder, lod_tex_path + os.extsep + 'thm')
+            raw_thm_path  = os.path.join(self.raw_tex_folder,  lod_tex_path + os.extsep + 'thm')
+
+            # output paths
+            out_game_tex_path = os.path.join(self.out_game_tex_folder, lod_tex_path + os.extsep + 'dds')
+            out_raw_tex_path  = os.path.join(self.out_raw_tex_folder,  lod_tex_path + os.extsep + 'tga')
+            out_thm_path      = os.path.join(self.out_game_tex_folder, lod_tex_path + os.extsep + 'thm')
+
+            texs = [
+                [game_tex_path, out_game_tex_path],
+                [raw_tex_path,  out_raw_tex_path],
+                [game_thm_path, out_thm_path],
+                [raw_thm_path,  out_thm_path]
+            ]
+
+            for src, dist in texs:
+                xray.utils.copy_file(src, dist, self.missing_files)
+
+    def copy_object(self, object_name, object_path):
+        # copy *.object file
+
+        out_object_path = os.path.join(self.out_objects_folder, object_name + os.extsep + 'object')
+
+        object_dir = os.path.dirname(out_object_path)
+        if not os.path.exists(object_dir):
+            os.makedirs(object_dir)
+
+        shutil.copyfile(object_path, out_object_path)
+
+    def copy_object_thm(self, object_name):
+        thm_path = os.path.join(self.objects_folder, object_name + os.extsep + 'thm')
+
+        if os.path.exists(thm_path):
+            out_thm_path = os.path.join(self.out_objects_folder, object_name + os.extsep + 'thm')
+
+            thm_dir = os.path.dirname(out_thm_path)
+            if not os.path.exists(thm_dir):
+                os.makedirs(thm_dir)
+
+            shutil.copyfile(thm_path, out_thm_path)
+
+        else:
+            self.missing_files.add(thm_path)
+
     def copy_objects(self):
         if self.objects:
             if not os.path.exists(self.out_objects_folder):
@@ -644,52 +700,13 @@ class ResourceCopier:
                 # *.object
                 object_path = os.path.join(self.objects_folder, object_name + os.extsep + 'object')
                 if os.path.exists(object_path):
-                    out_object_path = os.path.join(self.out_objects_folder, object_name + os.extsep + 'object')
-                    object_dir = os.path.dirname(out_object_path)
-                    if not os.path.exists(object_dir):
-                        os.makedirs(object_dir)
-                    shutil.copyfile(object_path, out_object_path)
-                    object_type = xray.object_format.get_object_textures(object_path, self.textures)
-
-                    # copy lod textures
-                    if object_type == 'MULIPLE_USAGE':
-
-                        lod_tex_path = 'lod' + os.sep + 'lod_' + object_name.replace(os.sep, '_')
-
-                        # source paths
-                        game_tex_path = os.path.join(self.game_tex_folder, lod_tex_path + os.extsep + 'dds')
-                        raw_tex_path  = os.path.join(self.raw_tex_folder,  lod_tex_path + os.extsep + 'tga')
-                        game_thm_path = os.path.join(self.game_tex_folder, lod_tex_path + os.extsep + 'thm')
-                        raw_thm_path  = os.path.join(self.raw_tex_folder,  lod_tex_path + os.extsep + 'thm')
-
-                        # output paths
-                        out_game_tex_path = os.path.join(self.out_game_tex_folder, lod_tex_path + os.extsep + 'dds')
-                        out_raw_tex_path  = os.path.join(self.out_raw_tex_folder,  lod_tex_path + os.extsep + 'tga')
-                        out_thm_path      = os.path.join(self.out_game_tex_folder, lod_tex_path + os.extsep + 'thm')
-
-                        texs = [
-                            [game_tex_path, out_game_tex_path],
-                            [raw_tex_path,  out_raw_tex_path],
-                            [game_thm_path, out_thm_path],
-                            [raw_thm_path,  out_thm_path]
-                        ]
-
-                        for src, dist in texs:
-                            xray.utils.copy_file(src, dist, self.missing_files)
-
+                    self.copy_object(object_name, object_path)
+                    self.copy_lod(object_name, object_path)
                 else:
                     self.missing_files.add(object_path)
 
                 # *.thm
-                thm_path = os.path.join(self.objects_folder, object_name + os.extsep + 'thm')
-                if os.path.exists(thm_path):
-                    out_thm_path = os.path.join(self.out_objects_folder, object_name + os.extsep + 'thm')
-                    thm_dir = os.path.dirname(out_thm_path)
-                    if not os.path.exists(thm_dir):
-                        os.makedirs(thm_dir)
-                    shutil.copyfile(thm_path, out_thm_path)
-                else:
-                    self.missing_files.add(thm_path)
+                self.copy_object_thm(object_name)
 
         return self.STATUS_OK
 
