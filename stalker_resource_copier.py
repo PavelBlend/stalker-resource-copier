@@ -551,15 +551,25 @@ class ResourceCopier:
         return self.STATUS_OK
 
     def collect_files(self):
+        is_raw_level = False
+
         if self.level_path.startswith(self.maps_dir):
+            is_raw_level = True
+
+        if os.path.splitext(self.level_path)[-1] == self.LEVEL_EXT:
+            is_raw_level = True
+
+        if is_raw_level:
             status = self.collect_rawdata_files()
         else:
             xray.game_level.read_game_level_textures(self.level_path, self.textures)
             status = self.STATUS_OK
+
         return status
 
     def collect_rawdata_files(self):
-        self.groups_dir = os.path.join(self.fs_dir, self.fs.values['$groups$'])
+        groups = self.fs.values['$groups$']
+        self.groups_dir = os.path.join(self.fs_dir, groups)
         self.level_folder = os.path.splitext(self.level_path)[0]
 
         if os.path.exists(self.level_folder):
@@ -577,7 +587,10 @@ class ResourceCopier:
         return self.STATUS_OK
 
     def collect_map_files(self):
+
         for file_name in os.listdir(self.level_folder):
+
+            file_name = file_name.lower()
             file_path = os.path.join(self.level_folder, file_name)
 
             if file_name == 'scene_object.part':
@@ -599,14 +612,23 @@ class ResourceCopier:
                 xray.scene_groups.read_level_groups(file_path, self.objects, self.groups_dir)
 
     def get_folders(self):
-        self.objects_folder = os.path.join(self.fs_dir, self.fs.values['$objects$'])
-        self.out_objects_folder = os.path.join(self.out_folder, self.fs.values['$objects$'])
 
-        self.game_tex_folder = os.path.join(self.fs_dir, self.fs.values['$game_textures$'])
-        self.out_game_tex_folder = os.path.join(self.out_folder, self.fs.values['$game_textures$'])
+        # relative path
+        objects       = self.fs.values['$objects$']
+        game_textures = self.fs.values['$game_textures$']
+        raw_textures  = self.fs.values['$textures$']
 
-        self.raw_tex_folder = os.path.join(self.fs_dir, self.fs.values['$textures$'])
-        self.out_raw_tex_folder = os.path.join(self.out_folder, self.fs.values['$textures$'])
+        # objects
+        self.objects_folder      = os.path.join(self.fs_dir,     objects)
+        self.out_objects_folder  = os.path.join(self.out_folder, objects)
+
+        # game textures
+        self.game_tex_folder     = os.path.join(self.fs_dir,     game_textures)
+        self.out_game_tex_folder = os.path.join(self.out_folder, game_textures)
+
+        # raw textures
+        self.raw_tex_folder = os.path.join(self.fs_dir,          raw_textures)
+        self.out_raw_tex_folder = os.path.join(self.out_folder,  raw_textures)
 
         return self.STATUS_OK
 
