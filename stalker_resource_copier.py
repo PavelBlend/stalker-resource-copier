@@ -222,7 +222,7 @@ class ResourceCopier:
         self.open_level_button = tkinter.Button(
             self.frame,
             text='set',
-            command=self.open_game_level,
+            command=self.open_level,
             bg=self.BUTTON_COLOR,
             font=self.ENTRY_FONT,
             width=5
@@ -443,7 +443,7 @@ class ResourceCopier:
             tkinter.filedialog.askopenfilename
         )
 
-    def open_game_level(self):
+    def open_level(self):
         self._set_entry_value(
             self.level_file_ent,
             tkinter.filedialog.askopenfilename
