@@ -666,36 +666,53 @@ class ResourceCopier:
 
     def copy_textures(self):
         # copy textures *.dds, *.tga, *.thm
+
         xray.utils.copy_files(
+
             self.textures,
             self.missing_files,
+
             self.game_tex_folder,
             self.raw_tex_folder,
+
             self.out_game_tex_folder,
             self.out_raw_tex_folder,
+
             'dds',
             'tga'
+
         )
+
         return self.STATUS_OK
 
     def copy_sounds(self):
         # copy sounds *.ogg, *.wav, *.thm
-        game_sounds_folder = os.path.join(self.fs_dir, self.fs.values['$game_sounds$'])
-        out_game_sounds_folder = os.path.join(self.out_folder, self.fs.values['$game_sounds$'])
 
-        raw_sounds_folder = os.path.join(self.fs_dir, self.fs.values['$sounds$'])
-        out_raw_sounds_folder = os.path.join(self.out_folder, self.fs.values['$sounds$'])
+        game_sounds = self.fs.values['$game_sounds$']
+        raw_sounds  = self.fs.values['$sounds$']
+
+        game_sounds_folder     = os.path.join(self.fs_dir,     game_sounds)
+        out_game_sounds_folder = os.path.join(self.out_folder, game_sounds)
+
+        raw_sounds_folder      = os.path.join(self.fs_dir,     raw_sounds)
+        out_raw_sounds_folder  = os.path.join(self.out_folder, raw_sounds)
 
         xray.utils.copy_files(
+
             self.sounds,
             self.missing_files,
+
             game_sounds_folder,
             raw_sounds_folder,
+
             out_game_sounds_folder,
             out_raw_sounds_folder,
+
             'ogg',
             'wav'
+
         )
+
         return self.STATUS_OK
 
     def copy_level_main_file(self):
