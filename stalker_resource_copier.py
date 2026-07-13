@@ -653,24 +653,30 @@ class ResourceCopier:
 
                     # copy lod textures
                     if object_type == 'MULIPLE_USAGE':
+
                         lod_tex_path = 'lod' + os.sep + 'lod_' + object_name.replace(os.sep, '_')
+
                         # source paths
                         game_tex_path = os.path.join(self.game_tex_folder, lod_tex_path + os.extsep + 'dds')
-                        raw_tex_path = os.path.join(self.raw_tex_folder, lod_tex_path + os.extsep + 'tga')
+                        raw_tex_path  = os.path.join(self.raw_tex_folder,  lod_tex_path + os.extsep + 'tga')
                         game_thm_path = os.path.join(self.game_tex_folder, lod_tex_path + os.extsep + 'thm')
-                        raw_thm_path = os.path.join(self.raw_tex_folder, lod_tex_path + os.extsep + 'thm')
+                        raw_thm_path  = os.path.join(self.raw_tex_folder,  lod_tex_path + os.extsep + 'thm')
+
                         # output paths
                         out_game_tex_path = os.path.join(self.out_game_tex_folder, lod_tex_path + os.extsep + 'dds')
-                        out_raw_tex_path = os.path.join(self.out_raw_tex_folder, lod_tex_path + os.extsep + 'tga')
-                        out_thm_path = os.path.join(self.out_game_tex_folder, lod_tex_path + os.extsep + 'thm')
+                        out_raw_tex_path  = os.path.join(self.out_raw_tex_folder,  lod_tex_path + os.extsep + 'tga')
+                        out_thm_path      = os.path.join(self.out_game_tex_folder, lod_tex_path + os.extsep + 'thm')
+
                         texs = [
                             [game_tex_path, out_game_tex_path],
-                            [raw_tex_path, out_raw_tex_path],
+                            [raw_tex_path,  out_raw_tex_path],
                             [game_thm_path, out_thm_path],
-                            [raw_thm_path, out_thm_path]
+                            [raw_thm_path,  out_thm_path]
                         ]
+
                         for src, dist in texs:
                             xray.utils.copy_file(src, dist, self.missing_files)
+
                 else:
                     self.missing_files.add(object_path)
 
