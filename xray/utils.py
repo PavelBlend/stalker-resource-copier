@@ -57,12 +57,12 @@ def save_settings(fs_path, out_folder, level_path):
         file.write(settings_text)
 
 
-def report_total_time(status_label, start_time):
+def report_total_time(status_label, start_time, bg_color):
     end_time = time.time()
     total_time = end_time - start_time
     total_time_str = 'total time:    {} sec'.format(round(total_time, 2))
     status_label.configure(text='')
-    status_label.configure(text=total_time_str, bg=const.LABEL_COLOR)
+    status_label.configure(text=total_time_str, bg=bg_color)
 
 
 def visit_repo_page(event):

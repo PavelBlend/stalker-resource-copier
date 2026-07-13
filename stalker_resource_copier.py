@@ -44,6 +44,7 @@ class ResourceCopier:
         # widget colors
         self.BACKGROUND_COLOR = '#808080'
         self.ACTIVE_BACKGROUND_COLOR = '#A0A0A0'
+        self.LABEL_COLOR = '#707070'
         self.BUTTON_COLOR = '#A0A0A0'
         self.ACTIVE_BUTTON_COLOR = '#B3B3B3'
         self.ERROR_COLOR = '#BC0000'
@@ -123,7 +124,7 @@ class ResourceCopier:
             self.frame,
             text=ver_text,
             font=self.LABEL_FONT,
-            bg=xray.const.LABEL_COLOR
+            bg=self.LABEL_COLOR
         )
 
         # date label
@@ -131,7 +132,7 @@ class ResourceCopier:
             self.frame,
             text=date_text,
             font=self.LABEL_FONT,
-            bg=xray.const.LABEL_COLOR
+            bg=self.LABEL_COLOR
         )
 
         # url label
@@ -139,7 +140,7 @@ class ResourceCopier:
             self.frame,
             text=xray.const.GITHUB_REPO_URL,
             font=self.LABEL_FONT,
-            bg=xray.const.LABEL_COLOR,
+            bg=self.LABEL_COLOR,
             fg=self.URL_COLOR,
             cursor="hand2"
         )
@@ -149,7 +150,7 @@ class ResourceCopier:
             self.frame,
             text='status:',
             font=self.LABEL_FONT,
-            bg=xray.const.LABEL_COLOR
+            bg=self.LABEL_COLOR
         )
 
         # status label
@@ -157,7 +158,7 @@ class ResourceCopier:
             self.frame,
             text='',
             font=self.LABEL_FONT,
-            bg=xray.const.LABEL_COLOR
+            bg=self.LABEL_COLOR
         )
 
         # fs.ltx label
@@ -165,7 +166,7 @@ class ResourceCopier:
             self.frame,
             text='fs.ltx:',
             font=self.LABEL_FONT,
-            bg=xray.const.LABEL_COLOR
+            bg=self.LABEL_COLOR
         )
 
         # output label
@@ -173,7 +174,7 @@ class ResourceCopier:
             self.frame,
             text='output:',
             font=self.LABEL_FONT,
-            bg=xray.const.LABEL_COLOR
+            bg=self.LABEL_COLOR
         )
 
         # lavel label
@@ -181,7 +182,7 @@ class ResourceCopier:
             self.frame,
             text='level:',
             font=self.LABEL_FONT,
-            bg=xray.const.LABEL_COLOR
+            bg=self.LABEL_COLOR
         )
 
     def create_buttons(self):
@@ -787,7 +788,7 @@ class ResourceCopier:
     def report(self):
         xray.utils.write_log(self.missing_files)
         xray.utils.save_settings(self.fs_path, self.out_folder, self.level_path)
-        xray.utils.report_total_time(self.status_label, self.start_time)
+        xray.utils.report_total_time(self.status_label, self.start_time, self.LABEL_COLOR)
 
 
 if __name__ == '__main__':

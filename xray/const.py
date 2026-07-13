@@ -1,5 +1,3 @@
-LABEL_COLOR = '#707070'
-
 FS_PATH_PROP = 'fs_path'
 OUT_FOLDER_PROP = 'out_folder'
 LEVEL_PATH_PROP = 'level_path'
