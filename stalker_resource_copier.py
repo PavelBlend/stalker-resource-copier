@@ -13,7 +13,10 @@ DATE = (2023, 5, 21)
 
 
 class ResourceCopier:
+
     STATUS_OK = True
+    LEVEL_EXT = '.level'
+    PART_EXT = '.part'
 
     def __init__(self):
         self.init_params()
@@ -695,21 +698,27 @@ class ResourceCopier:
         )
         return self.STATUS_OK
 
-    def copy_level(self):
-        if self.level_path.startswith(self.maps_dir):
-            level_rel_path = os.path.splitext(self.level_path)[0][len(self.maps_dir) : ]
-    
-            # copy *.level file
-            level_main_file_output_path = os.path.join(self.output_level_dir, level_rel_path) + '.level'
-            xray.utils.copy_file(self.level_path, level_main_file_output_path, self.missing_files)
+    def copy_level_main_file(self):
+        # copy *.level file
+        path = os.path.join(self.output_level_dir, self.level_rel_path) + self.LEVEL_EXT
+        xray.utils.copy_file(self.level_path, path, self.missing_files)
 
-            # copy *.part files
-            for file_name in os.listdir(self.level_folder):
-                part_name, part_ext = os.path.splitext(file_name)
-                if part_ext == '.part':
-                    part_src = os.path.join(self.level_folder, file_name)
-                    part_out = os.path.join(os.path.join(self.output_level_dir, level_rel_path), file_name)
-                    xray.utils.copy_file(part_src, part_out, self.missing_files)
+    def copy_level_part_files(self):
+        # copy *.part files
+        for file_name in os.listdir(self.level_folder):
+            part_name, part_ext = os.path.splitext(file_name)
+            if part_ext.lower() == self.PART_EXT:
+                part_src = os.path.join(self.level_folder, file_name)
+                part_out = os.path.join(self.output_level_dir, self.level_rel_path, file_name)
+                xray.utils.copy_file(part_src, part_out, self.missing_files)
+
+    def copy_level(self):
+        # copy rawdata\maps\level_name files
+        if self.level_path.startswith(self.maps_dir):
+            self.level_rel_path = os.path.splitext(self.level_path)[0][len(self.maps_dir) : ]
+
+            self.copy_level_main_file()
+            self.copy_level_part_files()
 
         return self.STATUS_OK
 
