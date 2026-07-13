@@ -9,14 +9,14 @@ import xray
 
 
 VERSION = (1, 2, 0)
-DATE = (2023, 5, 21)
+DATE    = (2023, 5, 21)
 
 
 class ResourceCopier:
 
     STATUS_OK = True
-    LEVEL_EXT = '.level'
-    PART_EXT = '.part'
+    LEVEL_EXT = os.extsep + 'level'
+    PART_EXT  = os.extsep + 'part'
 
     def __init__(self):
         self.init_params()
@@ -546,8 +546,9 @@ class ResourceCopier:
         return self.STATUS_OK
 
     def get_maps_dir(self):
-        self.maps_dir = os.path.join(self.fs_dir, self.fs.values['$maps$'])
-        self.output_level_dir = os.path.join(self.out_folder, self.fs.values['$maps$'])
+        maps = self.fs.values['$maps$']
+        self.maps_dir         = os.path.join(self.fs_dir,     maps)
+        self.output_level_dir = os.path.join(self.out_folder, maps)
         return self.STATUS_OK
 
     def collect_files(self):
