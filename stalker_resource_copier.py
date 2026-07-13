@@ -400,32 +400,33 @@ class ResourceCopier:
                 # set fs.ltx path
                 fs_path = def_stngs.params.get(xray.const.FS_PATH_PROP)
                 if fs_path:
-                    fs_path = fs_path.replace('\\', os.sep)
-                    fs_path = fs_path.replace('/', os.sep)
+                    fs_path = self.get_path(fs_path)
                     self.fs_path_ent.delete(0, last=tkinter.END)
                     self.fs_path_ent.insert(0, fs_path)
 
                 # set output path
                 out_path = def_stngs.params.get(xray.const.OUT_FOLDER_PROP)
                 if out_path:
-                    out_path = out_path.replace('\\', os.sep)
-                    out_path = out_path.replace('/', os.sep)
+                    out_path = self.get_path(out_path)
                     self.output_path_ent.delete(0, last=tkinter.END)
                     self.output_path_ent.insert(0, out_path)
 
                 # set level path
                 level_path = def_stngs.params.get(xray.const.LEVEL_PATH_PROP)
                 if level_path:
-                    level_path = level_path.replace('\\', os.sep)
-                    level_path = level_path.replace('/', os.sep)
+                    level_path = self.get_path(level_path)
                     self.level_file_ent.delete(0, last=tkinter.END)
                     self.level_file_ent.insert(0, level_path)
+
+    def get_path(self, path):
+        path = path.replace('\\', os.sep)
+        path = path.replace('/', os.sep)
+        return path
 
     def _set_entry_value(self, entry, dialog_fun):
         path = dialog_fun()
         if path:
-            path = path.replace('\\', os.sep)
-            path = path.replace('/', os.sep)
+            path = self.get_path(path)
             entry.delete(0, last=tkinter.END)
             entry.insert(0, path)
 
@@ -448,6 +449,7 @@ class ResourceCopier:
         )
 
     ###########################################################################
+
     def copy_resource(self):
         self.start_time = time.time()
 
@@ -475,8 +477,7 @@ class ResourceCopier:
 
     def read_fs_ltx(self):
         self.fs_path = self.fs_path_ent.get()
-        self.fs_path = self.fs_path.replace('/', os.sep)
-        self.fs_path = self.fs_path.replace('\\', os.sep)
+        self.fs_path = self.get_path(self.fs_path)
 
         if not os.path.exists(self.fs_path):
             self.status_label.configure(
@@ -493,8 +494,7 @@ class ResourceCopier:
 
     def get_output_folder(self):
         self.out_folder = self.output_path_ent.get()
-        self.out_folder = self.out_folder.replace('/', os.sep)
-        self.out_folder = self.out_folder.replace('\\', os.sep)
+        self.out_folder = self.get_path(self.out_folder)
 
         if not os.path.exists(self.out_folder):
             os.makedirs(self.out_folder)
@@ -517,8 +517,7 @@ class ResourceCopier:
 
     def get_level_path(self):
         self.level_path = self.level_file_ent.get()
-        self.level_path = self.level_path.replace('/', os.sep)
-        self.level_path = self.level_path.replace('\\', os.sep)
+        self.level_path = self.get_path(self.level_path)
 
         if not self.level_path:
             self.status_label.configure(
