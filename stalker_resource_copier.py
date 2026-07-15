@@ -9,8 +9,8 @@ import tkinter.filedialog
 import xray
 
 
-VERSION = (1, 3, 0)
-DATE    = (2026, 7, 13)
+VERSION = (1, 4, 0)
+DATE    = (2026, 7, 15)
 
 
 class ResourceCopier:
