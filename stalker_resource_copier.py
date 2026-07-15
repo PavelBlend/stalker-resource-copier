@@ -3,6 +3,7 @@ import time
 import shutil
 import webbrowser
 import tkinter
+import tkinter.ttk
 import tkinter.filedialog
 
 import xray
@@ -22,6 +23,7 @@ class ResourceCopier:
         self.init_params()
         self.create_root_window()
         self.create_main_frame()
+        self.create_style()
         self.create_widgets()
         self.place_widgets()
         self.bind_buttons()
@@ -47,11 +49,11 @@ class ResourceCopier:
         self.LABEL_COLOR = '#707070'
         self.BUTTON_COLOR = '#A0A0A0'
         self.ACTIVE_BUTTON_COLOR = '#B3B3B3'
-        self.ERROR_COLOR = '#BC0000'
-        self.URL_COLOR = '#00007C'
+        self.ERROR_COLOR = '#BC4040'
+        self.URL_COLOR = '#0000a0'
 
         # fonts
-        self.BUTTON_FONT = ('Font', 10, 'bold')
+        self.BUTTON_FONT = ('Font', 8, 'bold')
         self.LABEL_FONT = ('Font', 8, 'bold')
         self.ENTRY_FONT = ('Font', 7, 'bold')
 
@@ -77,11 +79,64 @@ class ResourceCopier:
         self.root.geometry('+%d+%d' % (root_pos_x, root_pos_y))
 
     def create_main_frame(self):
-        self.frame = tkinter.Frame(
+        self.frame = tkinter.ttk.Frame(
             self.root,
-            bg=self.BACKGROUND_COLOR,
+            style='Custom.TFrame',
             width=self.WINDOW_WIDTH,
             height=self.WINDOW_HEIGHT
+        )
+
+    def create_style(self):
+        self.style = tkinter.ttk.Style()
+        self.style.theme_use('clam')
+
+        # frame
+        self.style.configure(
+            'Custom.TFrame',
+            background=self.BACKGROUND_COLOR
+        )
+
+        # button
+        self.style.configure(
+            'TButton',
+            background=self.BUTTON_COLOR,
+            font=self.BUTTON_FONT,
+            bordercolor=self.BACKGROUND_COLOR,
+            lightcolor=self.ACTIVE_BUTTON_COLOR,
+            padding=(0, 0, 0, 0)
+        )
+
+        # entry
+        self.style.configure(
+            'TEntry',
+            background=self.BUTTON_COLOR,
+            fieldbackground=self.ACTIVE_BACKGROUND_COLOR,
+            bordercolor=self.BACKGROUND_COLOR,
+            font=self.ENTRY_FONT
+        )
+
+        # label
+        self.style.configure(
+            'TLabel',
+            background=self.BUTTON_COLOR,
+            lightcolor=self.BACKGROUND_COLOR,
+            font=self.LABEL_FONT
+        )
+
+        # label error
+        self.style.configure(
+            'Error.TLabel',
+            background=self.ERROR_COLOR,
+            lightcolor=self.BACKGROUND_COLOR,
+            font=self.LABEL_FONT
+        )
+
+        # url
+        self.style.configure(
+            'Url.TLabel',
+            background=self.BUTTON_COLOR,
+            foreground=self.URL_COLOR,
+            font=self.LABEL_FONT
         )
 
     def create_widgets(self):
@@ -91,27 +146,21 @@ class ResourceCopier:
 
     def create_entries(self):
         # fs.ltx entry
-        self.fs_path_ent = tkinter.Entry(
+        self.fs_path_ent = tkinter.ttk.Entry(
             self.frame,
-            width=self.ENTRY_WIDTH,
-            font=self.ENTRY_FONT,
-            bg=self.BUTTON_COLOR
+            width=self.ENTRY_WIDTH
         )
 
         # output entry
-        self.output_path_ent = tkinter.Entry(
+        self.output_path_ent = tkinter.ttk.Entry(
             self.frame,
-            width=self.ENTRY_WIDTH,
-            font=self.ENTRY_FONT,
-            bg=self.BUTTON_COLOR
+            width=self.ENTRY_WIDTH
         )
 
         # level entry
-        self.level_file_ent = tkinter.Entry(
+        self.level_file_ent = tkinter.ttk.Entry(
             self.frame,
-            width=self.ENTRY_WIDTH,
-            font=self.ENTRY_FONT,
-            bg=self.BUTTON_COLOR
+            width=self.ENTRY_WIDTH
         )
 
     def create_labels(self):
@@ -120,111 +169,93 @@ class ResourceCopier:
         date_text = '{}.{:0>2}.{:0>2}'.format(*DATE)
 
         # version label
-        self.ver_label = tkinter.Label(
+        self.ver_label = tkinter.ttk.Label(
             self.frame,
-            text=ver_text,
-            font=self.LABEL_FONT,
-            bg=self.LABEL_COLOR
+            anchor='center',
+            text=ver_text
         )
 
         # date label
-        self.date_label = tkinter.Label(
+        self.date_label = tkinter.ttk.Label(
             self.frame,
-            text=date_text,
-            font=self.LABEL_FONT,
-            bg=self.LABEL_COLOR
+            anchor='center',
+            text=date_text
         )
 
         # url label
-        self.github_label = tkinter.Label(
+        self.github_label = tkinter.ttk.Label(
             self.frame,
             text=xray.const.GITHUB_REPO_URL,
-            font=self.LABEL_FONT,
-            bg=self.LABEL_COLOR,
-            fg=self.URL_COLOR,
+            anchor='center',
+            style='Url.TLabel',
             cursor="hand2"
         )
 
         # status text label
-        self.status_text_label = tkinter.Label(
+        self.status_text_label = tkinter.ttk.Label(
             self.frame,
-            text='status:',
-            font=self.LABEL_FONT,
-            bg=self.LABEL_COLOR
+            anchor='center',
+            text='status:'
         )
 
         # status label
-        self.status_label = tkinter.Label(
+        self.status_label = tkinter.ttk.Label(
             self.frame,
-            text='',
-            font=self.LABEL_FONT,
-            bg=self.LABEL_COLOR
+            anchor='center',
+            text=''
         )
 
         # fs.ltx label
-        self.fs_path_label = tkinter.Label(
+        self.fs_path_label = tkinter.ttk.Label(
             self.frame,
-            text='fs.ltx:',
-            font=self.LABEL_FONT,
-            bg=self.LABEL_COLOR
+            anchor='center',
+            text='fs.ltx:'
         )
 
         # output label
-        self.output_path_label = tkinter.Label(
+        self.output_path_label = tkinter.ttk.Label(
             self.frame,
-            text='output:',
-            font=self.LABEL_FONT,
-            bg=self.LABEL_COLOR
+            anchor='center',
+            text='output:'
         )
 
         # lavel label
-        self.level_name_label = tkinter.Label(
+        self.level_name_label = tkinter.ttk.Label(
             self.frame,
-            text='level:',
-            font=self.LABEL_FONT,
-            bg=self.LABEL_COLOR
+            anchor='center',
+            text='level:'
         )
 
     def create_buttons(self):
         # copy resource button
-        self.copy_resource_button = tkinter.Button(
+        self.copy_resource_button = tkinter.ttk.Button(
             self.frame,
             text=self.COPY_RES_TEXT,
             width=self.BUTTON_WIDTH,
-            height=self.BUTTON_HEIGHT,
-            bg=self.BUTTON_COLOR,
-            activebackground=self.ACTIVE_BUTTON_COLOR,
-            font=self.ENTRY_FONT,
             command=self.copy_resource
         )
 
         # open fs.ltx button
-        self.open_fs_button = tkinter.Button(
+        self.open_fs_button = tkinter.ttk.Button(
             self.frame,
             text='set',
             command=self.open_fs,
-            bg=self.BUTTON_COLOR,
-            font=self.ENTRY_FONT,
             width=5
         )
 
         # set output button
-        self.set_output_button = tkinter.Button(
+        self.set_output_button = tkinter.ttk.Button(
             self.frame,
             text='set',
             command=self.set_output,
-            bg=self.BUTTON_COLOR,
-            font=self.ENTRY_FONT,
             width=5
         )
 
         # set level button
-        self.open_level_button = tkinter.Button(
+        self.open_level_button = tkinter.ttk.Button(
             self.frame,
             text='set',
             command=self.open_level,
-            bg=self.BUTTON_COLOR,
-            font=self.ENTRY_FONT,
             width=5
         )
 
@@ -503,7 +534,7 @@ class ResourceCopier:
         if os.listdir(self.out_folder):
             self.status_label.configure(
                 text='ERROR: Output folder is not empty!',
-                bg=self.ERROR_COLOR
+                style='Error.TLabel'
             )
             return
 
